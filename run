@@ -1,0 +1,9 @@
+#!/bin/sh
+
+CP=$(mvn dependency:build-classpath | grep -v INFO)
+
+TARGET=$(ls target/*.jar)
+
+PROJECT=$(basename $(pwd))
+
+java -cp $TARGET:$CP edu.brown.cs.bigdata.chsanfor.AudioEMD.Main "$*"

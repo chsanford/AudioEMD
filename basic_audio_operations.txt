@@ -1,0 +1,14 @@
+Mix add two WAV files: 
+(Note: this averages the volumes, so each will be half as loud)
+`sox -m addend1.wav addend2.wav out.wav`
+
+Fully negate a WAV file:
+(This would cancel with the original file)
+`sox -v -1 old.wav new.wav`
+
+Partially negate a WAV file:
+(For use with cancelling a mix of two files)
+`sox -v -0.5 old.wav new.wav`
+
+Subtract WAV files:
+`sox -m negated.wav total.wav difference.wav`

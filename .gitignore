@@ -1,0 +1,7 @@
+data/edinburgh/
+data/scp/
+data/toy/
+out/
+source/main/resources/cplex.jar
+target/
+temp/*
