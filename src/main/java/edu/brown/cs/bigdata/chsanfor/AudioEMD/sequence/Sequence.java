@@ -1,4 +1,4 @@
-package edu.brown.cs.bigdata.chsanfor.AudioEMD;
+package edu.brown.cs.bigdata.chsanfor.AudioEMD.sequence;
 
 /**
  * Represents something that can be expressed as a sequence of doubles.

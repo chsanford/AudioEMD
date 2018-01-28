@@ -1,4 +1,4 @@
-package edu.brown.cs.bigdata.chsanfor.AudioEMD;
+package edu.brown.cs.bigdata.chsanfor.AudioEMD.sequence;
 
 
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.wavfile.WavFile;
@@ -64,10 +64,18 @@ public class AudioSequence implements Sequence {
         return Math.sqrt(error);
     }
 
+    /**
+     * Obtains the audio file corresponding to the sequence
+     * @return the File corresponding to the sequence
+     */
     public File getAudioFile() {
         return audioFile;
     }
 
+    /**
+     * Gets the name of the audio file for the sequence
+     * @return a String representing the name of the audio file
+     */
     public String getFileName() {
         return audioFile.getName();
     }

@@ -3,9 +3,12 @@ package edu.brown.cs.bigdata.chsanfor.AudioEMD.denoising;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * Represents the RNNoise neural net (https://github.com/xiph/rnnoise/) approach to denoising audio.
+ * Takes RAW files as input.
+ */
 public class RNNoiseDenoisingAlgorithm extends CommandLineDenoisingAlgorithm {
 
-    private String runCommandLine = "./denoising-algs/rnnoise/examples/rnnoise_demo";
     private Runtime run = Runtime.getRuntime();
 
 
@@ -18,6 +21,8 @@ public class RNNoiseDenoisingAlgorithm extends CommandLineDenoisingAlgorithm {
         try {
             Process proc = run.exec("sox " + inputFile.getAbsolutePath()
                     + " -b 16 -c 1 -r 48k -e unsigned -t raw " + convertedLocation.getAbsolutePath());
+            // For each command, it's necessary to wait until the procedure completes.
+            // Otherwise, the next command may operate on an empty file.
             proc.waitFor();
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
@@ -27,6 +32,7 @@ public class RNNoiseDenoisingAlgorithm extends CommandLineDenoisingAlgorithm {
     @Override
     public void denoise(File fileToDenoise, File denoisedLocation) {
         try {
+            String runCommandLine = "./denoising-algs/rnnoise/examples/rnnoise_demo";
             Process proc = run.exec(runCommandLine
                     + " " + fileToDenoise.getAbsolutePath()
                     + " " + denoisedLocation.getAbsolutePath());
