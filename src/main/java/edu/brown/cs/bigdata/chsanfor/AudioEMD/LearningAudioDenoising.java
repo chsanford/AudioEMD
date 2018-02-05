@@ -1,7 +1,7 @@
 package edu.brown.cs.bigdata.chsanfor.AudioEMD;
 
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.denoising.DenoisingAlgorithm;
-import edu.brown.cs.bigdata.chsanfor.AudioEMD.matching.MatchingAudio;
+import edu.brown.cs.bigdata.chsanfor.AudioEMD.matching.ClusterMatchingAudio;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.matching.NoiseCleanPair;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.sequence.AudioSequence;
 import ilog.concert.IloException;
@@ -52,8 +52,9 @@ public class LearningAudioDenoising {
         }
 
         // Creates pairs of noise and clean files in cluster to be used as training data
-        trainingNoiseCleanPair = MatchingAudio.MatchAudio(
-                trainingClean, trainingNoise, cleanClusterSize, noiseClusterSize,
+        ClusterMatchingAudio clustering = new ClusterMatchingAudio(cleanClusterSize, noiseClusterSize);
+        trainingNoiseCleanPair = clustering.matchAudio(
+                trainingClean, trainingNoise,
                 new File("temp/temp_file.wav"));
 
         optimizeWeights();

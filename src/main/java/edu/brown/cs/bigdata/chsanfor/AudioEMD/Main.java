@@ -18,6 +18,7 @@ public class Main {
      * Uses the RNNoise algorithm to denoise a sound file and save its output
      */
     private static void denoiseExample() {
+        System.out.print("hi");
         AudioSequence input = new AudioSequence(new File("data/scp/p257_424.wav"));
         DenoisingAlgorithm rnnoise = new RNNoiseDenoisingAlgorithm();
         AudioSequence output = rnnoise.apply(input, new File("temp/denoised_output.wav"));
