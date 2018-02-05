@@ -32,7 +32,7 @@ public class RNNoiseDenoisingAlgorithm extends CommandLineDenoisingAlgorithm {
     @Override
     public void denoise(File fileToDenoise, File denoisedLocation) {
         try {
-            String runCommandLine = "./denoising-algs/rnnoise/examples/rnnoise_demo";
+            String runCommandLine = "./denoising_algs/rnnoise/examples/rnnoise_demo";
             Process proc = run.exec(runCommandLine
                     + " " + fileToDenoise.getAbsolutePath()
                     + " " + denoisedLocation.getAbsolutePath());

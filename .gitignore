@@ -1,5 +1,6 @@
 data/edinburgh/
 data/toy/
+data/sample/noisy_testset_wav/
 out/
 src/main/resources/cplex.jar
 target/
