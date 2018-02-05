@@ -16,7 +16,7 @@ public abstract class MatchingAudio {
      * @param destPath location to output the files representing the pairs of noise and clean files
      * @return A list of NoiseCleanPair, pairs of noisy and clean data
      */
-    public List<NoiseCleanPair> matchAudio(
+    public final List<NoiseCleanPair> matchAudio(
             AudioSequence[] cleanAudio,
             AudioSequence[] noiseAudio,
             File destPath) {
