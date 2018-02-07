@@ -1,0 +1,16 @@
+Makefile
+Makefile.in
+aclocal.m4
+autom4te.cache
+compile
+config.*
+configure
+decomp
+install-sh
+librnoise.la
+libtool
+missing
+package_version
+rnnoise-uninstalled.pc
+rnnoise.pc
+stamp-h1
