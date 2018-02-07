@@ -32,10 +32,10 @@ $pkman $packages
 
 #Build RNNoise in a subshell
 (
-cd denoising-algs/rnnoise
+cd denoising_algs/rnnoise
 ./autogen.sh
 ./configure
 make
-make install
+sudo make install
 )
 
