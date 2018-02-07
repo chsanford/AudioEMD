@@ -5,12 +5,14 @@ autom4te.cache
 compile
 config.*
 configure
-decomp
+depcomp
 install-sh
-librnoise.la
+librnnoise.la
 libtool
+ltmain.sh
 missing
 package_version
 rnnoise-uninstalled.pc
 rnnoise.pc
 stamp-h1
+.libs/
