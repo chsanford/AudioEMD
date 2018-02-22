@@ -24,7 +24,7 @@ public class WavFile
 	private IOState ioState;				// Specifies the IO State of the Wav File (used for snaity checking)
 	private int bytesPerSample;			// Number of bytes required to store a single sample
 	private long numFrames;					// Number of frames within the data section
-	private FileOutputStream oStream;	// Output stream used for writting data
+	private FileOutputStream oStream;	// FunctionOutput stream used for writting data
 	private FileInputStream iStream;		// Input stream used for reading data
 	private double floatScale;				// Scaling factor used for int <-> float conversion				
 	private double floatOffset;			// Offset factor used for int <-> float conversion				

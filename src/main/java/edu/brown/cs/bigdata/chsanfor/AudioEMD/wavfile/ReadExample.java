@@ -41,7 +41,7 @@ public class ReadExample
 			// Close the wavFile
 			wavFile.close();
 
-			// Output the minimum and maximum value
+			// FunctionOutput the minimum and maximum value
 			System.out.printf("Min: %f, Max: %f\n", min, max);
 		}
 		catch (Exception e)
