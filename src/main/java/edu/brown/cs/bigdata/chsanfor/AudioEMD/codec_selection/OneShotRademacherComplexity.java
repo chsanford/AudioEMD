@@ -42,7 +42,10 @@ public class OneShotRademacherComplexity implements EmpiricalComplexity {
             double numSamples,
             double numCriteria) {
         double radius = 2 * complexity + 3 * Math.sqrt(Math.log(2 * numCriteria / delta) / (2 * numSamples));
-        return new ConfidenceInterval(delta, empiricalMean + radius, empiricalMean - radius);
+        return new ConfidenceInterval(
+                delta,
+                Math.min(1, empiricalMean + radius),
+                Math.max(0, empiricalMean - radius));
     }
 
 
