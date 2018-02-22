@@ -79,8 +79,8 @@ public class BruteForce {
                     optimalLowerBoundF = lowerBound;
                     optimalFIndex = i;
                 }
-            // For functions that we are confident are invalid, then we find an upper bound on the objective function
-            } else if (constraint.isNeverValidRectangle(confidenceIntervalsFC[i])) {
+            // For functions that may be valid, then we find an upper bound on the objective function
+            } else if (!constraint.isNeverValidRectangle(confidenceIntervalsFC[i])) {
                 double upperBound = objective.maxRectangle(confidenceIntervalsFC[i]);
                 if (maxUpperBound == null || upperBound > maxUpperBound) {
                     maxUpperBound = upperBound;

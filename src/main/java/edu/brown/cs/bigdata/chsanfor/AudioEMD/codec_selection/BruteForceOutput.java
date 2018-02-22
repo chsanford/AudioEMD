@@ -1,8 +1,5 @@
 package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection;
 
-/**
- * Created by Clayton on 2/22/18.
- */
 public class BruteForceOutput {
     private Function optimalFunction;
     private double[] optimalCriteriaMeansC;
