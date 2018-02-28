@@ -1,4 +1,4 @@
-package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection;
+package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general;
 
 /**
  * Represents a confience interval with upper and lower bounds and a probability of being in the interval

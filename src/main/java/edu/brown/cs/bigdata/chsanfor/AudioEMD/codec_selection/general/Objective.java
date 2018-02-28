@@ -1,4 +1,4 @@
-package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection;
+package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general;
 
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealVector;
@@ -55,6 +55,21 @@ public class Objective {
      * @return the maximum objective
      */
     public double maxRectangle(ConfidenceInterval[] confidenceIntervalsC) {
+        int numCriteria = weights.getDimension();
+        double[] greatestObjectiveVertex = new double[numCriteria];
+        // For each criterion, chooses the lower bound or upper bound depending on which point will have a greater
+        //      value for this given criterion -- because of the linearity of the objective, that vertex must have the
+        //      maximum value
+        for (int j = 0; j < numCriteria; j++) {
+            if (weights.getEntry(j) > 0) {
+                greatestObjectiveVertex[j] = confidenceIntervalsC[j].getUpperBound();
+            } else {
+                greatestObjectiveVertex[j] = confidenceIntervalsC[j].getLowerBound();
+            }
+        }
+        return compute(greatestObjectiveVertex);
+
+        /* Deprecated code with old method
         Double maxObjective = null;
 
         // Iterates through every combination of upper/lower bounds to check all vertices
@@ -74,7 +89,7 @@ public class Objective {
             }
         }
 
-        return maxObjective;
+        return maxObjective;*/
     }
 
     /**
@@ -84,6 +99,22 @@ public class Objective {
      * @return the minimum objective
      */
     public double minRectangle(ConfidenceInterval[] confidenceIntervalsC) {
+        int numCriteria = weights.getDimension();
+        double[] leastObjectiveVertex = new double[numCriteria];
+        // For each criterion, chooses the lower bound or upper bound depending on which point will have a lower
+        //      value for this given criterion -- because of the linearity of the objective, that vertex must have the
+        //      minimum value
+        for (int j = 0; j < numCriteria; j++) {
+            if (weights.getEntry(j) > 0) {
+                leastObjectiveVertex[j] = confidenceIntervalsC[j].getLowerBound();
+            } else {
+                leastObjectiveVertex[j] = confidenceIntervalsC[j].getUpperBound();
+            }
+        }
+        return compute(leastObjectiveVertex);
+
+        /* Deprecated code with old method
+
         Double minObjective = null;
 
         // Iterates through every combination of upper/lower bounds to check all vertices
@@ -103,7 +134,7 @@ public class Objective {
             }
         }
 
-        return minObjective;
+        return minObjective;*/
     }
 
 }

@@ -1,6 +1,8 @@
 package edu.brown.cs.bigdata.chsanfor.AudioEMD.sequence;
 
 
+import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.FunctionOutput;
+import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.Sample;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.wavfile.WavFile;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.wavfile.WavFileException;
 
@@ -10,7 +12,7 @@ import java.io.IOException;
 /**
  * Represents an audio file and the sequence of numbers in [0,1] that can be obtained from it.
  */
-public class AudioSequence implements Sequence {
+public class AudioSequence implements Sequence, Sample, FunctionOutput {
     private File audioFile;
 
     /**
@@ -54,11 +56,12 @@ public class AudioSequence implements Sequence {
      * Obtains the L2 error between two audio time sequence arrays.
      */
     public double error(Sequence seq2) {
-        assert getSequenceLength() == seq2.getSequenceLength();
         double error = 0;
         double[] arr1 = getSequence();
         double[] arr2 = seq2.getSequence();
-        for (int i = 0; i < getSequenceLength(); i++) {
+        int len1 = getSequenceLength();
+        int len2 = seq2.getSequenceLength();
+        for (int i = 0; i < len1 && i < len2; i++) {
             error += Math.pow(arr1[i] - arr2[i], 2);
         }
         return Math.sqrt(error);
@@ -78,6 +81,11 @@ public class AudioSequence implements Sequence {
      */
     public String getFileName() {
         return audioFile.getName();
+    }
+
+    @Override
+    public void delete() {
+        audioFile.delete();
     }
 }
 

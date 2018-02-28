@@ -1,6 +1,5 @@
-package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection;
+package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -48,6 +47,7 @@ public class BruteForce {
             // Computes complexity for each criterion
             Criterion c = criteria.get(i);
             double complexityC = complexity.getComplexity(c, functionClass, samples);
+
             for (int j = 0; j < functionClass.size(); j++) {
                 Function f = functionClass.get(j);
 
@@ -55,7 +55,7 @@ public class BruteForce {
                 empiricalMeansFC[i][j] = 0;
                 double[] valuesCF = c.applyAll(samples, f);
                 for (double v : valuesCF) {
-                    empiricalMeansFC[i][j] += v;
+                    empiricalMeansFC[i][j] += v / valuesCF.length;
                 }
 
                 // Bounds those estimates
@@ -65,6 +65,7 @@ public class BruteForce {
                         delta,
                         samples.size(),
                         criteria.size());
+
             }
         }
 
@@ -79,8 +80,9 @@ public class BruteForce {
                     optimalLowerBoundF = lowerBound;
                     optimalFIndex = i;
                 }
+            }
             // For functions that may be valid, then we find an upper bound on the objective function
-            } else if (!constraint.isNeverValidRectangle(confidenceIntervalsFC[i])) {
+            if (!constraint.isNeverValidRectangle(confidenceIntervalsFC[i])) {
                 double upperBound = objective.maxRectangle(confidenceIntervalsFC[i]);
                 if (maxUpperBound == null || upperBound > maxUpperBound) {
                     maxUpperBound = upperBound;

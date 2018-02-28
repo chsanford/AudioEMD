@@ -1,4 +1,4 @@
-package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection;
+package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general;
 
 /**
  * Output of a function... more may be listed here later.
