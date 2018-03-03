@@ -21,18 +21,45 @@ public class OneShotRademacherComplexity implements EmpiricalComplexity {
         RealVector sigmaVector = MatrixUtils.createRealVector(sigma);
 
         Double maxComplexity = null;
-        Function maxFunction = null;
         for (Function f : functionClass) {
             RealVector cfVector = MatrixUtils.createRealVector(c.applyAll(samples, f));
             cfVector.mapSubtract(0.5);
             double functionComplexity = cfVector.dotProduct(sigmaVector) / samples.size();
-            if (maxFunction == null || functionComplexity > maxComplexity) {
+            if (maxComplexity == null || functionComplexity > maxComplexity) {
                 maxComplexity = functionComplexity;
-                maxFunction = f;
             }
         }
         return Math.max(0, maxComplexity);
     }
+
+    @Override
+    public double getComplexity(Double[][] criterionValuesFS) {
+        int numSamples = criterionValuesFS[0].length;
+        int numFunctions = criterionValuesFS.length;
+        Random rand = new Random();
+        double[] sigma = new double[numSamples];
+        for (int s = 0; s < sigma.length; s++) {
+            if (rand.nextBoolean()) sigma[s] = 1;
+            else sigma[s] = -1;
+        }
+        RealVector sigmaVector = MatrixUtils.createRealVector(sigma);
+
+        Double maxComplexity = null;
+        for (int f = 0; f < numFunctions; f++) {
+            double[] vectorInput = new double[criterionValuesFS[f].length];
+            for (int c = 0; c < vectorInput.length; c++) {
+                vectorInput[c] = criterionValuesFS[f][c];
+            }
+            RealVector cfVector = MatrixUtils.createRealVector(vectorInput);
+            cfVector.mapSubtract(0.5);
+            double functionComplexity = cfVector.dotProduct(sigmaVector) / numSamples;
+            if (maxComplexity == null || functionComplexity > maxComplexity) {
+                maxComplexity = functionComplexity;
+            }
+        }
+        return Math.max(0, maxComplexity);
+    }
+
 
     @Override
     public ConfidenceInterval getConfidenceInterval(

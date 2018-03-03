@@ -1,5 +1,6 @@
 package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.criteria;
 
+import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.CompressionFunctionOutput;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.compression_functions.CompressionFunction;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.Criterion;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.Function;
@@ -10,21 +11,19 @@ import edu.brown.cs.bigdata.chsanfor.AudioEMD.sequence.AudioSequence;
 import java.io.File;
 
 /**
- * Created by Clayton on 2/27/18.
+ * Obtains the ratio of the size of the compressed file to that of the uncompressed file
  */
 public class CompressionRatioCriterion extends Criterion {
+
+    public static String NAME = "COMPRESSION_RATIO";
+
+    public static String getName() {
+        return NAME;
+    }
+
     @Override
-    public double apply(Sample x, Function f, FunctionOutput fx) {
-        AudioSequence xCast = (AudioSequence) x;
-        CompressionFunction fCast = (CompressionFunction) f;
-
-        File tempCompressed = new File("data/temp/temp_compressed." + fCast.getScheme());
-        fCast.compress(xCast, tempCompressed);
-
-        double compressionRatio = 1.0 * tempCompressed.length() / xCast.getAudioFile().length();
-
-        tempCompressed.delete();
-
-        return compressionRatio;
+    public double apply(FunctionOutput fx) {
+        return ((CompressionFunctionOutput) fx).getCriterion(NAME);
     }
 }
+

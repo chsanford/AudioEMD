@@ -2,16 +2,13 @@ package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression
 
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.CompressionFunctionOutput;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.Criterion;
-import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.Function;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.FunctionOutput;
-import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.Sample;
-import edu.brown.cs.bigdata.chsanfor.AudioEMD.sequence.AudioSequence;
 
 /**
- * Obtains the squared error between the original and decompressed files
+ * Obtains the amount of time needed to compress an audio file
  */
-public class ErrorCriterion extends Criterion {
-    private static String NAME = "ERROR";
+public class CompressionTimeCriterion extends Criterion {
+    private static String NAME = "COMPRESSION_TIME";
 
     public static String getName() {
         return NAME;

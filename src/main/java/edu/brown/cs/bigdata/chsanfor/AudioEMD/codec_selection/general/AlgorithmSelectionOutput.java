@@ -1,12 +1,12 @@
 package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general;
 
-public class BruteForceOutput {
+public class AlgorithmSelectionOutput {
     private Function optimalFunction;
-    private double[] optimalCriteriaMeansC;
+    private Double[] optimalCriteriaMeansC;
     private ConfidenceInterval[] optimalCriteriaConfidenceIntervalsC;
     private double upperBound;
 
-    public BruteForceOutput(Function optimalFunction, double[] optimalCriteriaMeansC, ConfidenceInterval[] optimalCriteriaConfidenceIntervalsC, double upperBound) {
+    public AlgorithmSelectionOutput(Function optimalFunction, Double[] optimalCriteriaMeansC, ConfidenceInterval[] optimalCriteriaConfidenceIntervalsC, double upperBound) {
         this.optimalFunction = optimalFunction;
         this.optimalCriteriaMeansC = optimalCriteriaMeansC;
         this.optimalCriteriaConfidenceIntervalsC = optimalCriteriaConfidenceIntervalsC;
@@ -17,7 +17,7 @@ public class BruteForceOutput {
         return optimalFunction;
     }
 
-    public double[] getOptimalCriteriaMeansC() {
+    public Double[] getOptimalCriteriaMeansC() {
         return optimalCriteriaMeansC;
     }
 

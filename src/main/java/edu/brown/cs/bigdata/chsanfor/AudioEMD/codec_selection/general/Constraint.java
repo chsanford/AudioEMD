@@ -64,7 +64,7 @@ public class Constraint {
         FunctionOutput fx = f.apply(x);
         double[] criteriaOutput = new double[criteria.size()];
         for (int i = 0; i < criteria.size(); i++) {
-            criteriaOutput[i] = criteria.get(i).apply(x, f, fx);
+            criteriaOutput[i] = criteria.get(i).apply(fx);
         }
         fx.delete();
         return isValid(criteriaOutput);
@@ -79,7 +79,7 @@ public class Constraint {
     public boolean isAlwaysValidRectangle(ConfidenceInterval[] confidenceIntervalsC) {
         if (!hasConstraints) return true;
         int numConstraints = boundVector.getDimension();
-        int numCriteria = coefficientMatrix.getRowDimension();
+        int numCriteria = coefficientMatrix.getColumnDimension();
         for (int i = 0; i < numConstraints; i++) {
             double[] greatestConstraintVertex = new double[numCriteria];
             // For each criterion, chooses the lower bound or upper bound depending on which point will have a greater
@@ -121,7 +121,7 @@ public class Constraint {
     public boolean isNeverValidRectangle(ConfidenceInterval[] confidenceIntervalsC) {
         if (!hasConstraints) return false;
         int numConstraints = boundVector.getDimension();
-        int numCriteria = coefficientMatrix.getRowDimension();
+        int numCriteria = coefficientMatrix.getColumnDimension();
         for (int i = 0; i < numConstraints; i++) {
             double[] leastConstraintVertex = new double[numCriteria];
             // For each criterion, chooses the lower bound or upper bound depending on which point will have a lesser

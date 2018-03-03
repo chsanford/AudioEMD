@@ -17,6 +17,13 @@ public interface EmpiricalComplexity {
     double getComplexity(Criterion c, List<Function> functionClass, List<Sample> samples);
 
     /**
+     * Computes the sample complexity for a criterion applied to a function class
+     * @param criterionValuesFS gives the value of a criterion evaluated for each certain function on each sample
+     * @return a measure of complexity, which can be used to make bounds
+     */
+    double getComplexity(Double[][] criterionValuesFS);
+
+    /**
      * Obtains a confidence interval based on the complexity obtained
      * @param empiricalMean the empirically-estimated mean for the criterion applied to the function class
      * @param complexity the complexity value for the corresponding criterion and function class

@@ -1,6 +1,5 @@
 package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -27,12 +26,12 @@ public class BruteForce {
      * @param objective a linear combination of criteria that functions aim to maximize
      * @param constraint a set of linear inequalities that must be satisfied by the optimal function
      * @param delta a probability of error
-     * @return a BruteForceOutput object with the optimal function, empirical estimates for its value for each
+     * @return a AlgorithmSelectionOutput object with the optimal function, empirical estimates for its value for each
      *                  critierion, confidence bounds on those values, and an upper bound on the objective
      * @throws InsufficientSampleSizeException if not enough data is present to ensure that at least one function will
      *                  certainly satisfy the constraints
      */
-    public BruteForceOutput runAlgorithm(
+    public AlgorithmSelectionOutput runAlgorithm(
             List<Sample> samples,
             List<Function> functionClass,
             List<Criterion> criteria,
@@ -40,27 +39,36 @@ public class BruteForce {
             Constraint constraint,
             double delta) throws InsufficientSampleSizeException {
 
-        double[][] empiricalMeansFC = new double[functionClass.size()][criteria.size()];
+        Double[][][] criterionValuesCFS = new Double[criteria.size()][functionClass.size()][samples.size()];
+
+        for (int f = 0; f < functionClass.size(); f++) {
+            for (int s = 0; s < samples.size(); s++) {
+                FunctionOutput fOut = functionClass.get(f).apply(samples.get(s));
+                for (int c = 0; c < criteria.size(); c++) {
+                    criterionValuesCFS[c][f][s] = criteria.get(c).apply(fOut);
+                }
+            }
+        }
+
+        Double[][] empiricalMeansFC = new Double[functionClass.size()][criteria.size()];
         ConfidenceInterval[][] confidenceIntervalsFC = new ConfidenceInterval[functionClass.size()][criteria.size()];
 
-        for (int i = 0; i < criteria.size(); i++) {
+        for (int c = 0; c < criteria.size(); c++) {
             // Computes complexity for each criterion
-            Criterion c = criteria.get(i);
-            double complexityC = complexity.getComplexity(c, functionClass, samples);
+            double complexityC = complexity.getComplexity(criterionValuesCFS[c]);
 
-            for (int j = 0; j < functionClass.size(); j++) {
-                Function f = functionClass.get(j);
+            for (int f = 0; f < functionClass.size(); f++) {
 
                 // Estimates the value of each criterion for each function
-                empiricalMeansFC[i][j] = 0;
-                double[] valuesCF = c.applyAll(samples, f);
-                for (double v : valuesCF) {
-                    empiricalMeansFC[i][j] += v / valuesCF.length;
+                empiricalMeansFC[f][c] = 0.;
+                for (double v : criterionValuesCFS[c][f]) {
+                    empiricalMeansFC[f][c] += (v / samples.size());
                 }
+                System.out.println(empiricalMeansFC[f][c]);
 
                 // Bounds those estimates
-                confidenceIntervalsFC[i][j] = complexity.getConfidenceInterval(
-                        empiricalMeansFC[i][j],
+                confidenceIntervalsFC[f][c] = complexity.getConfidenceInterval(
+                        empiricalMeansFC[f][c],
                         complexityC,
                         delta,
                         samples.size(),
@@ -72,18 +80,18 @@ public class BruteForce {
         Integer optimalFIndex = null;
         Double optimalLowerBoundF = null;
         Double maxUpperBound = null;
-        for (int i = 0; i < functionClass.size(); i++) {
+        for (int f = 0; f < functionClass.size(); f++) {
             // For functions that we are confident are valid, we find the one with the greatest lower-bound objective
-            if (constraint.isAlwaysValidRectangle(confidenceIntervalsFC[i])) {
-                double lowerBound = objective.minRectangle(confidenceIntervalsFC[i]);
+            if (constraint.isAlwaysValidRectangle(confidenceIntervalsFC[f])) {
+                double lowerBound = objective.minRectangle(confidenceIntervalsFC[f]);
                 if (optimalFIndex == null || lowerBound < optimalLowerBoundF) {
                     optimalLowerBoundF = lowerBound;
-                    optimalFIndex = i;
+                    optimalFIndex = f;
                 }
             }
             // For functions that may be valid, then we find an upper bound on the objective function
-            if (!constraint.isNeverValidRectangle(confidenceIntervalsFC[i])) {
-                double upperBound = objective.maxRectangle(confidenceIntervalsFC[i]);
+            if (!constraint.isNeverValidRectangle(confidenceIntervalsFC[f])) {
+                double upperBound = objective.maxRectangle(confidenceIntervalsFC[f]);
                 if (maxUpperBound == null || upperBound > maxUpperBound) {
                     maxUpperBound = upperBound;
                 }
@@ -95,7 +103,7 @@ public class BruteForce {
             throw new InsufficientSampleSizeException();
         }
 
-        return new BruteForceOutput(
+        return new AlgorithmSelectionOutput(
                 functionClass.get(optimalFIndex),
                 empiricalMeansFC[optimalFIndex],
                 confidenceIntervalsFC[optimalFIndex],

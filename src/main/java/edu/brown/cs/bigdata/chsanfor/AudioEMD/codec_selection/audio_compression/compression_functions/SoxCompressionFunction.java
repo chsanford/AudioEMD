@@ -25,6 +25,7 @@ public abstract class SoxCompressionFunction extends CompressionFunction {
             // For each command, it's necessary to wait until the procedure completes.
             // Otherwise, the next command may operate on an empty file.
             proc.waitFor();
+
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }

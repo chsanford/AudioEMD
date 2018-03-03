@@ -42,7 +42,7 @@ public class Objective {
         FunctionOutput fx = f.apply(x);
         double[] criteriaOutput = new double[criteria.size()];
         for (int i = 0; i < criteria.size(); i++) {
-            criteriaOutput[i] = criteria.get(i).apply(x, f, fx);
+            criteriaOutput[i] = criteria.get(i).apply(fx);
         }
         fx.delete();
         return compute(criteriaOutput);
