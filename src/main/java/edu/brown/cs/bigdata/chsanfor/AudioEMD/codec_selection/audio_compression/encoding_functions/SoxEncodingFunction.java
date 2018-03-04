@@ -1,4 +1,4 @@
-package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.compression_functions;
+package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.encoding_functions;
 
 
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.sequence.AudioSequence;
@@ -9,10 +9,10 @@ import java.io.IOException;
 /**
  * Created by Clayton on 2/9/18.
  */
-public abstract class SoxCompressionFunction extends CompressionFunction {
+public abstract class SoxEncodingFunction extends EncodingFunction {
     private Runtime run = Runtime.getRuntime();
 
-    public SoxCompressionFunction(String extension) {
+    public SoxEncodingFunction(String extension) {
         super(extension);
     }
 

@@ -28,7 +28,7 @@ public class ProgressiveSampling {
      * @param criteria measurements of various quantities of function outputs
      * @param objective a linear combination of criteria that functions aim to maximize
      * @param constraint a set of linear inequalities that must be satisfied by the optimal function
-     * @param delta a probability of error
+     * @param delta an upper bound on the probability of error
      * @return a AlgorithmSelectionOutput object with the optimal function, empirical estimates for its value for each
      *                  critierion, confidence bounds on those values, and an upper bound on the objective
      * @throws InsufficientSampleSizeException if not enough data is present to ensure that at least one function will
@@ -89,7 +89,7 @@ public class ProgressiveSampling {
                     ConfidenceInterval newInterval = complexity.getConfidenceInterval(
                             empiricalMeansFC.get(f)[c],
                             complexityC,
-                            delta,
+                            delta / maxIterations,
                             currentSamples.size(),
                             criteria.size());
                     if (confidenceIntervalsFC.get(f)[c] == null) {
@@ -158,7 +158,7 @@ public class ProgressiveSampling {
 
             if (optimalFIndex != null &&
                     (objective.minRectangle(confidenceIntervalsFC.get(optimalFIndex)) >=
-                    objective.maxRectangle(confidenceIntervalsFC.get(optimalFIndex)))) {
+                    objective.maxRectangle(confidenceIntervalsFC.get(optimalFIndex)) - epsilon)) {
                 return new AlgorithmSelectionOutput(
                         functionClass.get(optimalFIndex),
                         empiricalMeansFC.get(optimalFIndex),

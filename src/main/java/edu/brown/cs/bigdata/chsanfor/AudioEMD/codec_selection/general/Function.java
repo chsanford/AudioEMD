@@ -22,4 +22,6 @@ public abstract class Function {
         }
         return output;
     }
+
+    public abstract String toString();
 }

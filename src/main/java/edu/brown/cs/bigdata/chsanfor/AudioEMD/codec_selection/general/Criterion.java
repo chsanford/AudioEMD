@@ -27,4 +27,10 @@ public abstract class Criterion {
         }
         return criterionOutput;
     }
+
+    /**
+     *
+     * @return a strings representing the type of criterion
+     */
+    public abstract String toString();
 }

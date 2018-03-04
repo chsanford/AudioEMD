@@ -1,11 +1,11 @@
 package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression;
 
-import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.compression_functions.MP3CompressionFunction;
-import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.compression_functions.OggCompressionFunction;
+import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.encoding_functions.MP3EncodingFunction;
+import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.encoding_functions.OggEncodingFunction;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.criteria.CompressionRatioCriterion;
-import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.criteria.CompressionTimeCriterion;
-import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.criteria.DecompressionTimeCriterion;
-import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.criteria.ErrorCriterion;
+import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.criteria.EncodingTimeCriterion;
+import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.criteria.DecodingTimeCriterion;
+import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.criteria.MeanSquaredErrorCriterion;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.*;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.sequence.AudioSequence;
 
@@ -25,15 +25,15 @@ public class Main {
         for (File file : files) audioSamples.add(new AudioSequence(file));
 
         List<Function> functionClass = Arrays.asList(
-                (Function) new MP3CompressionFunction(),
-                (Function) new OggCompressionFunction()
+                (Function) new MP3EncodingFunction(),
+                (Function) new OggEncodingFunction()
         );
 
         List<Criterion> criteria = Arrays.asList(
-                new ErrorCriterion(),
+                new MeanSquaredErrorCriterion(),
                 new CompressionRatioCriterion(),
-                new CompressionTimeCriterion(),
-                new DecompressionTimeCriterion()
+                new EncodingTimeCriterion(),
+                new DecodingTimeCriterion()
         );
 
         Objective objective = new Objective(new double[]{-0.5, -0.5, 0, 0});
@@ -48,8 +48,7 @@ public class Main {
         ProgressiveSampling ps = new ProgressiveSampling(new OneShotRademacherComplexity());
 
         try {
-            /*
-            AlgorithmSelectionOutput out = bf.runAlgorithm(
+            /*AlgorithmSelectionOutput out = bf.runAlgorithm(
                     audioSamples,
                     functionClass,
                     criteria,
@@ -66,26 +65,16 @@ public class Main {
                     0.05,
                     0.5);
 
-            System.out.println("Best algorithm: " + out.getOptimalFunction().getClass().getName());
-            System.out.println("Criteria 0 mean: " + out.getOptimalCriteriaMeansC()[0]);
-            System.out.println("Criteria 1 mean: " + out.getOptimalCriteriaMeansC()[1]);
-            System.out.println("Criteria 2 mean: " + out.getOptimalCriteriaMeansC()[2]);
-            System.out.println("Criteria 3 mean: " + out.getOptimalCriteriaMeansC()[3]);
-            System.out.println("Objective upper bound: " + out.getUpperBound());
-            System.out.println("Criteria 0 lower bound: " + out.getOptimalCriteriaConfidenceIntervalsC()[0].getLowerBound());
-            System.out.println("Criteria 0 upper bound: " + out.getOptimalCriteriaConfidenceIntervalsC()[0].getUpperBound());
-            System.out.println("Criteria 1 lower bound: " + out.getOptimalCriteriaConfidenceIntervalsC()[1].getLowerBound());
-            System.out.println("Criteria 1 upper bound: " + out.getOptimalCriteriaConfidenceIntervalsC()[1].getUpperBound());
-            System.out.println("Criteria 2 lower bound: " + out.getOptimalCriteriaConfidenceIntervalsC()[2].getLowerBound());
-            System.out.println("Criteria 2 upper bound: " + out.getOptimalCriteriaConfidenceIntervalsC()[2].getUpperBound());
-            System.out.println("Criteria 3 lower bound: " + out.getOptimalCriteriaConfidenceIntervalsC()[3].getLowerBound());
-            System.out.println("Criteria 3 upper bound: " + out.getOptimalCriteriaConfidenceIntervalsC()[3].getUpperBound());
 
-        } catch (InsufficientSampleSizeException e) {
-            e.printStackTrace();
-        } catch (NoSatisfactoryFunctionsException e) {
-            e.printStackTrace();
-        } catch (EmptyConfidenceIntervalException e) {
+            System.out.println("Best algorithm: " + out.getOptimalFunction().toString());
+            System.out.println("Objective upper bound: " + out.getUpperBound());
+            for (int c = 0; c < criteria.size(); c++) {
+                System.out.println("Criteria " + c + " (" + criteria.get(c).toString() + ") " +
+                        out.getOptimalCriteriaMeansC()[c] + " in " +
+                        out.getOptimalCriteriaConfidenceIntervalsC()[c].toString());
+            }
+
+        } catch (InsufficientSampleSizeException | NoSatisfactoryFunctionsException | EmptyConfidenceIntervalException e) {
             e.printStackTrace();
         }
     }

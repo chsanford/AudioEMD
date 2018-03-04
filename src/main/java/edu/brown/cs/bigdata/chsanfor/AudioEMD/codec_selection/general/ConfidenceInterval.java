@@ -32,4 +32,8 @@ public class ConfidenceInterval {
     public double getLowerBound() {
         return lowerBound;
     }
+
+    public String toString() {
+        return "[" + lowerBound + ", " + upperBound + "]";
+    }
 }

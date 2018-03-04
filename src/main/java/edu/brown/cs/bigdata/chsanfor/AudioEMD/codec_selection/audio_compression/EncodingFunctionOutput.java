@@ -9,10 +9,10 @@ import java.util.Map;
 /**
  * Represents the metadata output of a compression algorithm
  */
-public class CompressionFunctionOutput implements FunctionOutput  {
+public class EncodingFunctionOutput implements FunctionOutput  {
     private Map<String, Double> criteria;
 
-    public CompressionFunctionOutput(Map<String, Double> criteria) {
+    public EncodingFunctionOutput(Map<String, Double> criteria) {
         this.criteria = criteria;
     }
 
