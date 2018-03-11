@@ -60,6 +60,9 @@ public class ProgressiveSampling {
 
         for (int i = 0; i < maxIterations; i++) {
 
+            System.out.println("Iteration " + i + " of " + maxIterations + " (" + sampleSize + " samples)");
+
+
             List<Sample> currentSamples = samples.subList(firstSample, firstSample + sampleSize);
 
             Double[][][] criterionValuesCFS = new Double[criteria.size()][functionClass.size()][currentSamples.size()];
@@ -168,19 +171,21 @@ public class ProgressiveSampling {
 
             firstSample += sampleSize;
             sampleSize *= 2;
+
+            for (int f = 0; f < functionClass.size(); f++) {
+                System.out.println("Function " + f + ": " + functionClass.get(f).toString());
+                for (int c = 0; c < criteria.size(); c++) {
+                    System.out.println("Criteria " + c + " (" + criteria.get(c).toString() + ") " +
+                            empiricalMeansFC.get(f)[c] + " in " +
+                            confidenceIntervalsFC.get(f)[c].toString());
+                }
+            }
+            System.out.println();
             
 
         }
 
         // If no valid function is found, throw exception
-        for (int f = 0; f < functionClass.size(); f++) {
-            System.out.println("Function " + f + ": " + functionClass.get(f).toString());
-            for (int c = 0; c < criteria.size(); c++) {
-                System.out.println("Criteria " + c + " (" + criteria.get(c).toString() + ") " +
-                        empiricalMeansFC.get(f)[c] + " in " +
-                        confidenceIntervalsFC.get(f)[c].toString());
-            }
-        }
 
         throw new InsufficientSampleSizeException();
 
