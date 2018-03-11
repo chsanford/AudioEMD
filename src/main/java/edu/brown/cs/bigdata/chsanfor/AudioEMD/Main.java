@@ -5,13 +5,19 @@ import edu.brown.cs.bigdata.chsanfor.AudioEMD.denoising.RNNoiseDenoisingAlgorith
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.sequence.AudioSequence;
 
 import java.io.File;
+import java.util.Objects;
 
 /**
  * Intended to be used for testing/running various commands.
  */
 public class Main {
     public static void main(String[] args) {
-        denoiseExample();
+        if (args.length == 0) {
+            denoiseExample();
+        }
+        else if (Objects.equals(args[0], "codec")) {
+            edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.Main.main(args);
+        }
     }
 
     /**
