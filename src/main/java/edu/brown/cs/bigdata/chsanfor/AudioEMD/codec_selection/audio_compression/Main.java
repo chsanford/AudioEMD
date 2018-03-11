@@ -19,7 +19,11 @@ import java.util.List;
  */
 public class Main {
     public static void main(String[] args) {
-        File originalDir = new File("data/edinburgh/noisy_testset_wav/");
+        String dirPath = "data/edinburgh/noisy_testset_wav/";
+        if (args.length >= 2) {
+            dirPath = args[1];
+        }
+        File originalDir = new File(dirPath);
         File[] files = originalDir.listFiles();
         List<Sample> audioSamples = new ArrayList<>();
         for (File file : files) audioSamples.add(new AudioSequence(file));
