@@ -85,7 +85,7 @@ public class ProgressiveSampling {
                     // Estimates the value of each criterion for each function
                     empiricalMeansFC.get(f)[c] = 0.;
                     for (double v : criterionValuesCFS[c][f]) {
-                        empiricalMeansFC.get(f)[c] += (v / samples.size());
+                        empiricalMeansFC.get(f)[c] += (v / sampleSize);
                     }
 
                     // Bounds those estimates
