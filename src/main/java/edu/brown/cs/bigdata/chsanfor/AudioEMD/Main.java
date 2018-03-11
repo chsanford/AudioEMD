@@ -9,6 +9,8 @@ import java.util.Objects;
 
 /**
  * Intended to be used for testing/running various commands.
+ *
+ * to run codec: mvn exec:java -Dexec.args="codec PATH/TO/DIRECTORY"
  */
 public class Main {
     public static void main(String[] args) {
