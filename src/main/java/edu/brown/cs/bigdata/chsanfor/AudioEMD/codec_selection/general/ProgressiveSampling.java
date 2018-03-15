@@ -1,5 +1,7 @@
 package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general;
 
+import com.sun.tools.javac.util.ArrayUtils;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -173,9 +175,19 @@ public class ProgressiveSampling {
             sampleSize *= 2;
 
             for (int f = 0; f < functionClass.size(); f++) {
-                System.out.println("Function " + f + ": " + functionClass.get(f).toString());
+                if (constraint.isAlwaysValidRectangle(confidenceIntervalsFC.get(f))) {
+                    System.out.println("Function " + f + ": " + functionClass.get(f).toString() + "(valid)");
+                } else if (constraint.isNeverValidRectangle(confidenceIntervalsFC.get(f))) {
+                    System.out.println("Function " + f + ": " + functionClass.get(f).toString() + "(invalid)");
+                } else {
+                    System.out.println("Function " + f + ": " + functionClass.get(f).toString() + "(undetermined)");
+                }
+                double[] currentMeans = new double[criteria.size()];
+                for (int c = 0; c < criteria.size(); c++) currentMeans[c] = empiricalMeansFC.get(f)[c];
+                System.out.println("- Objective " + objective.compute(currentMeans) + " in [" + objective.minRectangle(confidenceIntervalsFC.get(f))
+                        + ", " + objective.maxRectangle(confidenceIntervalsFC.get(f)) + "]");
                 for (int c = 0; c < criteria.size(); c++) {
-                    System.out.println("Criteria " + c + " (" + criteria.get(c).toString() + ") " +
+                    System.out.println("- Criteria " + c + " (" + criteria.get(c).toString() + ") " +
                             empiricalMeansFC.get(f)[c] + " in " +
                             confidenceIntervalsFC.get(f)[c].toString());
                 }

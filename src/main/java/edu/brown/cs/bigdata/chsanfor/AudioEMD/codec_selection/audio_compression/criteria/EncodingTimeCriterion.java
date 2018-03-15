@@ -16,7 +16,7 @@ public class EncodingTimeCriterion extends Criterion {
 
     @Override
     public double apply(FunctionOutput fx) {
-        return ((EncodingFunctionOutput) fx).getCriterion(NAME);
+        return ((EncodingFunctionOutput) fx).getCriterion(this);
     }
 
     @Override

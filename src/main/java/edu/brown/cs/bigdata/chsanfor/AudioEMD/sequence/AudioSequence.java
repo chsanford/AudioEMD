@@ -56,17 +56,23 @@ public class AudioSequence implements Sequence, Sample, FunctionOutput {
      * Obtains the L2 error between two audio time sequence arrays.
      */
     public double error(Sequence seq2) {
+        return error(seq2, 2);
+    }
+
+    /**
+     * Obtains the mean power error between two sequences given a power
+     */
+    public double error(Sequence seq2, double power) {
         double error = 0;
         double[] arr1 = getSequence();
         double[] arr2 = seq2.getSequence();
         int len1 = getSequenceLength();
         int len2 = seq2.getSequenceLength();
         for (int i = 0; i < len1 && i < len2; i++) {
-            error += Math.pow(arr1[i] - arr2[i], 2);
+            error += Math.pow(arr1[i] - arr2[i], power);
         }
-        return Math.sqrt(error);
+        return Math.pow(error, 1. / power);
     }
-
     /**
      * Obtains the audio file corresponding to the sequence
      * @return the File corresponding to the sequence

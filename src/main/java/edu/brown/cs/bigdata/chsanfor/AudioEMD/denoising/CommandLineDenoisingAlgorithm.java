@@ -3,6 +3,7 @@ package edu.brown.cs.bigdata.chsanfor.AudioEMD.denoising;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.sequence.AudioSequence;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * Represents all denoising algorithms that are run on the command line. In general, these follow the format:
@@ -11,6 +12,8 @@ import java.io.File;
  *  3) Convert the denoised file back into WAV format
  */
 public abstract class CommandLineDenoisingAlgorithm implements DenoisingAlgorithm {
+
+    Runtime run = Runtime.getRuntime();
 	
 	/**
 	 * field to store the convertedFileExtension
