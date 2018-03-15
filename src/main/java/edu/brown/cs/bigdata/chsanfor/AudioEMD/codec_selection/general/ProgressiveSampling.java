@@ -1,7 +1,5 @@
 package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general;
 
-import com.sun.tools.javac.util.ArrayUtils;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
