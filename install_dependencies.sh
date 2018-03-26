@@ -25,17 +25,3 @@ fi
 echo $pkman $packages
 $pkman $packages
 
-###########
-#Denoisers:
-
-#TODO download RNNoise
-
-#Build RNNoise in a subshell
-(
-cd denoising_algs/rnnoise
-./autogen.sh
-./configure
-make
-sudo make install
-)
-
