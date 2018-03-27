@@ -7,14 +7,17 @@ set -e
 
 #Attempt to install these from the command line.
 
-packages="autoconf make sox maven"
+packages="autoconf make sox maven git2cl gtk-doc-tools gstreamer1.0 libgstreamer-plugins-base1.0-dev"
+
+#peaq may also want these:
+#git2cl gtk-doc-tools w3-dtd-mathml libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-tools gstreamer1.0-plugins-base
 
 #Package manager:
 #Default to the false command, which will signal an error.
 pkman=false
 
 #Try to select package manager based on OS.
-if [[ "$OSTYPE" == 'linux-gnu' ]]; then
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
   pkman="sudo apt-get install"
 elif [[ "$unamestr" == "freebsd"* ]]; then
   pkman="pkg"
@@ -25,3 +28,18 @@ fi
 echo $pkman $packages
 $pkman $packages
 
+##############################
+#Inconsistently Named Packages
+
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
+  packages=""
+elif [[ "$unamestr" == "freebsd"* ]]; then
+  packages=""
+elif [[ "$unamestr" == "darwin"* ]]; then
+  packages=""
+fi
+
+if [[ ! $packages == "" ]]; then
+  echo $pkman $packages
+  $pkman $packages
+fi
