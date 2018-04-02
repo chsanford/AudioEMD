@@ -16,14 +16,18 @@ packages="autoconf make sox maven git2cl gtk-doc-tools gstreamer1.0 libgstreamer
 #Default to the false command, which will signal an error.
 pkman=false
 
+unamestr=$(uname -s)
+echo $unamestr
+
 #Try to select package manager based on OS.
-if [[ "$OSTYPE" == "linux-gnu" ]]; then
-  pkman="sudo apt-get install"
-elif [[ "$unamestr" == "freebsd"* ]]; then
-  pkman="pkg"
-elif [[ "$unamestr" == "darwin"* ]]; then
-  pkman="brew install"
-fi
+#if [[ "$OSTYPE" == "linux-gnu" ]]; then
+case "${unamestr}" in
+  Linux*) pkman="apt-get install";;
+  FreeBSD*) pkman="pkg";;
+  Darwin*) pkman="brew install";;
+  CYGWIN*) pkman=false;; #TODO
+  MINGW*) pkman=false;;
+esac
 
 echo $pkman $packages
 $pkman $packages
