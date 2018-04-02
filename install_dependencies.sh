@@ -7,7 +7,9 @@ set -e
 
 #Attempt to install these from the command line.
 
-packages="autoconf make sox maven git2cl gtk-doc-tools gstreamer1.0 libgstreamer-plugins-base1.0-dev"
+packages="autoconf make sox maven gstreamer gst-plugins-base glibtool glibtoolize"
+#packages="autoconf make sox maven git2cl gtk-doc-tools gstreamer1.0 libgstreamer-plugins-base1.0-dev"
+
 
 #peaq may also want these:
 #git2cl gtk-doc-tools w3-dtd-mathml libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-tools gstreamer1.0-plugins-base

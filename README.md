@@ -10,4 +10,5 @@ To build the required audio software, run ./build_audio_binaries.sh.  This scrip
 Then, run `mvn package`.
 
 # Running
-To run code from the Main class, run `mvn exec:java`.
+## Codec Experiments
+To run a progressive sampling experiment, run `mvn exec:java -Dexec.args="codec SAMPLE/DIRECTORY"`. This calls the top-level `Main.java` class, which in turn calls `codec_selection/audio_compression/Main.java`, where progressive sampling is run. 
