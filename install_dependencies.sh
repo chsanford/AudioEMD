@@ -7,7 +7,7 @@ set -e
 
 #Attempt to install these from the command line.
 
-packages="autoconf make sox maven git2cl gtk-doc-tools gstreamer1.0 libgstreamer-plugins-base1.0-dev"
+packages="autoconf make sox maven git2cl gtk-doc-tools"
 
 #peaq may also want these:
 #git2cl gtk-doc-tools w3-dtd-mathml libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-tools gstreamer1.0-plugins-base
@@ -20,13 +20,18 @@ unamestr=$(uname -s)
 echo $unamestr
 
 #Try to select package manager based on OS.
-#if [[ "$OSTYPE" == "linux-gnu" ]]; then
 case "${unamestr}" in
   Linux*) pkman="apt-get install";;
   FreeBSD*) pkman="pkg";;
   Darwin*) pkman="brew install";;
   CYGWIN*) pkman=false;; #TODO
   MINGW*) pkman=false;;
+esac
+
+#Add additional packages that are inconsistently named
+case "${pkman}" in
+  apt-get*) packages="$packages gstreamer1.0 libgstreamer-plugins-base1.0-dev";;
+  brew*) packages="$packages glibtool glibtoolize gstreamer gstreamer-base";;
 esac
 
 echo $pkman $packages
