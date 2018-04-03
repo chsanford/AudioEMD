@@ -6,13 +6,13 @@ set -e
 #Denoisers:
 
 #Build RNNoise in a subshell
-(
-  cd denoising_algs/rnnoise
-  ./autogen.sh
-  ./configure
-  make
-  #sudo make install
-)
+#(
+#  cd denoising_algs/rnnoise
+#  ./autogen.sh
+#  ./configure
+#  make
+#  #sudo make install
+#)
 
 
 #build NoNoise
