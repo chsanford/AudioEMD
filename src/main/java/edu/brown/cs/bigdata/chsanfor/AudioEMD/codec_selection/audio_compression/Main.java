@@ -11,24 +11,24 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Created by Clayton on 2/27/18.
  */
 public class Main {
     public static void main(String[] args) {
-        String dirPath = "data/edinburgh/noisy_testset_wav/";
-        if (args.length >= 2) {
-            dirPath = args[1];
-        }
-        File originalDir = new File(dirPath);
-        File[] files = originalDir.listFiles();
-        List<Sample> audioSamples = new ArrayList<>();
-        for (File file : files) audioSamples.add(new AudioSequence(file));
+        assert args.length >= 3;
+        String option = args[1];
 
+        System.out.println(option);
 
+        int initialSampleSize = 100;
+        double epsilon = 0.05;
+        double delta = 0.05;
 
         List<Criterion> criteria = Arrays.asList(
+                new PEAQObjectiveDifferenceCriterion(),
                 new RootMeanSquaredErrorCriterion(),
                 new CompressionRatioCriterion(),
                 new EncodingTimeCriterion(),
@@ -36,57 +36,70 @@ public class Main {
         );
 
         List<Function> functionClass = Arrays.asList(
-                //(Function) new MP3EncodingFunction(criteria),
-                //(Function) new OggEncodingFunction(criteria)
-                (Function) new LameMP3EncodingFunction(0, criteria),
                 (Function) new LameMP3EncodingFunction(1, criteria),
-                (Function) new LameMP3EncodingFunction(2, criteria),
                 (Function) new LameMP3EncodingFunction(3, criteria),
-                (Function) new LameMP3EncodingFunction(4, criteria),
                 (Function) new LameMP3EncodingFunction(5, criteria),
-                (Function) new LameMP3EncodingFunction(6, criteria)
+                (Function) new LameMP3EncodingFunction(7, criteria),
+                (Function) new LameMP3EncodingFunction(9, criteria)
         );
 
-        Objective objective = new Objective(new double[]{-0.5, -0.5, 0, 0});
+        Objective objective = new Objective(new double[]{-0.5, 0, -0.5, 0, 0});
 
-        //Constraint constraint = new Constraint();
         Constraint constraint = new Constraint(
-                new double[][]{{0, 0, 1, 0}, {0, 0, 0, 1}},
+                new double[][]{{0, 0, 0, 1, 0}, {0, 0, 0, 0, 1}},
                 new double[]{0.5, 0.5}
         );
 
         BruteForce bf = new BruteForce(new OneShotRademacherComplexity());
         ProgressiveSampling ps = new ProgressiveSampling(new OneShotRademacherComplexity());
 
-        try {
-            /*AlgorithmSelectionOutput out = bf.runAlgorithm(
-                    audioSamples,
-                    functionClass,
-                    criteria,
-                    objective,
-                    constraint,
-                    0.05);*/
-            AlgorithmSelectionOutput out = ps.runAlgorithm(
-                    audioSamples,
-                    50,
-                    functionClass,
-                    criteria,
-                    objective,
-                    constraint,
-                    0.05,
-                    0.05);
-
-
-            System.out.println("Best algorithm: " + out.getOptimalFunction().toString());
-            System.out.println("Objective upper bound: " + out.getUpperBound());
-            for (int c = 0; c < criteria.size(); c++) {
-                System.out.println("Criteria " + c + " (" + criteria.get(c).toString() + ") " +
-                        out.getOptimalCriteriaMeansC()[c] + " in " +
-                        out.getOptimalCriteriaConfidenceIntervalsC()[c].toString());
+        if (Objects.equals(option, "ps-directory")) {
+            List<Sample> audioSamples = loadDataset(args[2]);
+            try {
+                AlgorithmSelectionOutput out = ps.runAlgorithm(
+                        audioSamples,
+                        initialSampleSize,
+                        functionClass,
+                        criteria,
+                        objective,
+                        constraint,
+                        epsilon,
+                        delta);
+            } catch (InsufficientSampleSizeException |
+                    NoSatisfactoryFunctionsException |
+                    EmptyConfidenceIntervalException e) {
+                e.printStackTrace();
             }
 
-        } catch (InsufficientSampleSizeException | NoSatisfactoryFunctionsException | EmptyConfidenceIntervalException e) {
-            e.printStackTrace();
+        } else if (Objects.equals(option, "fill-csv")) {
+            List<Sample> audioSamples = loadDataset(args[2]);
+            String sampleCSV = args[3];
+            ps.fillCSV(
+                    audioSamples,
+                    functionClass,
+                    criteria,
+                    new File(sampleCSV)
+            );
+
+        } else if (Objects.equals(option, "ps-csv")) {
+            String sampleCSV = args[2];
+            String outCSV = args[3];
+            try {
+                AlgorithmSelectionOutput out = ps.runAlgorithm(
+                        new File(sampleCSV),
+                        new File(outCSV),
+                        initialSampleSize,
+                        functionClass,
+                        criteria,
+                        objective,
+                        constraint,
+                        epsilon,
+                        delta);
+            } catch (InsufficientSampleSizeException |
+                    NoSatisfactoryFunctionsException |
+                    EmptyConfidenceIntervalException e) {
+                e.printStackTrace();
+            }
         }
     }
 

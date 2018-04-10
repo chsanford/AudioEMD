@@ -3,8 +3,7 @@ package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.Criterion;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.sequence.AudioSequence;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.List;
 
 /**
@@ -12,7 +11,7 @@ import java.util.List;
  */
 public class LameMP3EncodingFunction extends EncodingFunction {
     private static String EXTENSION = "mp3";
-    private static int MAX_PORTABILITY = 6;
+    private static int MAX_PORTABILITY = 9;
     private static int MIN_PORTABILITY = 0;
 
     private int portability;
@@ -21,7 +20,7 @@ public class LameMP3EncodingFunction extends EncodingFunction {
 
     /**
      *
-     * @param portability integer in {0, ..., 6} where 0 is highest quality and 6 is most portable
+     * @param portability integer in {0, ..., 9} where 0 is highest quality and 9 is most portable
      * @param criteria
      */
     public LameMP3EncodingFunction(int portability, List<Criterion> criteria) {
@@ -40,6 +39,15 @@ public class LameMP3EncodingFunction extends EncodingFunction {
             // Otherwise, the next command may operate on an empty file.
             proc.waitFor();
 
+
+            /*InputStream outputText = proc.getErrorStream();
+            BufferedReader br = new BufferedReader(new InputStreamReader(outputText));
+            String line;
+            while ((line = br.readLine()) != null) {
+                System.out.println(line);
+            }*/
+
+
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
@@ -48,10 +56,21 @@ public class LameMP3EncodingFunction extends EncodingFunction {
     @Override
     public void decompress(File input, File output) {
         try {
-            Process proc = run.exec("sox "
+            //Process proc = run.exec("sox "
+            //        + input.getAbsolutePath() + " "
+            //        + output.getAbsolutePath());
+            Process proc = run.exec("lame "
                     + input.getAbsolutePath() + " "
-                    + output.getAbsolutePath());
+                    + output.getAbsolutePath() + " -V" + portability + " --decode");
             proc.waitFor();
+
+            /*InputStream outputText = proc.getErrorStream();
+            BufferedReader br = new BufferedReader(new InputStreamReader(outputText));
+            String line;
+            while ((line = br.readLine()) != null) {
+                System.out.println(line);
+            }*/
+
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
