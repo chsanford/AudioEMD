@@ -33,4 +33,12 @@ public abstract class Criterion {
      * @return a strings representing the type of criterion
      */
     public abstract String toString();
+
+    public static double[] applyCriteria(List<Criterion> criteria, FunctionOutput fx) {
+        double[] out = new double[criteria.size()];
+        for (int c = 0; c < criteria.size(); c++) {
+            out[c] = criteria.get(c).apply(fx);
+        }
+        return out;
+    }
 }

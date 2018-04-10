@@ -7,6 +7,7 @@ import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.Function;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.FunctionOutput;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.Sample;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.sequence.AudioSequence;
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
 import java.util.HashMap;
@@ -30,8 +31,10 @@ public abstract class EncodingFunction extends Function {
     public FunctionOutput apply(Sample sample) {
         AudioSequence audioSample = (AudioSequence) sample;
 
-        File tempCompressed = new File("data/temp/temp_compressed." + extension);
-        File tempDecompressed = new File("data/temp/temp_decompressed.wav");
+        String filename = FilenameUtils.getBaseName(audioSample.getFileName());
+
+        File tempCompressed = new File("data/temp/temp_compressed_" + filename + "." + extension);
+        File tempDecompressed = new File("data/temp/temp_decompressed_" + filename + ".wav");
 
 
         long startCompressionTime = System.nanoTime();
@@ -56,16 +59,13 @@ public abstract class EncodingFunction extends Function {
                 1.0 * (endDecompressionTime - endCompressionTime) / (10e9));*/
 
         for (Criterion c : criteria) {
-            if (c.toString() == RootMeanSquaredErrorCriterion.getName()) {
-                criteriaMap2.put(c, decompressed.error(audioSample) / (audioSample.getSequenceLength()));
-            } else if (c.toString() == MeanPowerErrorCriterion.getName()) {
-                double power = ((MeanPowerErrorCriterion) c).getPower();
-                criteriaMap2.put(c, decompressed.error(audioSample, power) / (audioSample.getSequenceLength()));
-            } else if (c.toString() == CompressionRatioCriterion.getName()) {
+            if (c instanceof WavDivergenceCriterion) {
+                criteriaMap2.put(c, ((WavDivergenceCriterion) c).computeCriterion(audioSample, decompressed));
+            }  else if (c instanceof CompressionRatioCriterion) {
                 criteriaMap2.put(c, 1.0 * tempCompressed.length() / audioSample.getAudioFile().length());
-            } else if (c.toString() == EncodingTimeCriterion.getName()) {
+            } else if (c instanceof EncodingTimeCriterion) {
                 criteriaMap2.put(c, (endCompressionTime - startCompressionTime) / (10e9));
-            } else if (c.toString() == DecodingTimeCriterion.getName()) {
+            } else if (c instanceof DecodingTimeCriterion) {
                 criteriaMap2.put(c, (endDecompressionTime - endCompressionTime) / (10e9));
             }
         }
