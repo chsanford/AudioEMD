@@ -90,4 +90,24 @@ public class Main {
         }
     }
 
+    //Loading Datasets:
+    public static List<Sample> loadDataset(List<String> directories, String filter) {
+        List<Sample> samples = new ArrayList<>();
+        for(String d : directories) {
+            for(File f : new File(d).listFiles()) {
+                if(filter.equals("") || f.getName().matches(filter)) {
+                    samples.add(new AudioSequence(f));
+                }
+            }
+        }
+        return samples;
+    }
+    public static List<Sample> loadDataset(List<String> directories) {
+        return loadDataset(directories, "");
+    }
+    public static List<Sample> loadDataset(String directory) {
+        List<String> l = new ArrayList<String>();
+        l.add(directory);
+        return loadDataset(l);
+    }
 }
