@@ -70,7 +70,6 @@ public class Main {
                     EmptyConfidenceIntervalException e) {
                 e.printStackTrace();
             }
-
         } else if (Objects.equals(option, "fill-csv")) {
             List<Sample> audioSamples = loadDataset(args[2]);
             String sampleCSV = args[3];
@@ -80,7 +79,6 @@ public class Main {
                     criteria,
                     new File(sampleCSV)
             );
-
         } else if (Objects.equals(option, "ps-csv")) {
             String sampleCSV = args[2];
             String outCSV = args[3];
