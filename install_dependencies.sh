@@ -30,7 +30,7 @@ esac
 
 #Add additional packages that are inconsistently named
 case "${pkman}" in
-  apt-get*) packages="$packages gstreamer1.0 libgstreamer-plugins-base1.0-dev";;
+  apt-get*) packages="$packages ubuntu-restricted-addons gstreamer1.0 libgstreamer-plugins-base1.0-dev";;
   brew*) packages="$packages glibtool glibtoolize gstreamer gstreamer-base gst-plugins-base";;
 esac
 
