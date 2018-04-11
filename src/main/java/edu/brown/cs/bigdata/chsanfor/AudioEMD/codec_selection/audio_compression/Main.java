@@ -37,9 +37,13 @@ public class Main {
 
         List<Function> functionClass = Arrays.asList(
                 (Function) new LameMP3EncodingFunction(1, criteria),
+                (Function) new LameMP3EncodingFunction(2, criteria),
                 (Function) new LameMP3EncodingFunction(3, criteria),
+                (Function) new LameMP3EncodingFunction(4, criteria),
                 (Function) new LameMP3EncodingFunction(5, criteria),
+                (Function) new LameMP3EncodingFunction(6, criteria),
                 (Function) new LameMP3EncodingFunction(7, criteria),
+                (Function) new LameMP3EncodingFunction(8, criteria),
                 (Function) new LameMP3EncodingFunction(9, criteria)
         );
 

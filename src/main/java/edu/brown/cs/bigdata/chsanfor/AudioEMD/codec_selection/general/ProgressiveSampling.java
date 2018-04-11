@@ -46,6 +46,7 @@ public class ProgressiveSampling {
                     criterionValuesCFS[c][f][s] = criteriaOutput[s][c];
                 }
             }
+            System.err.println("Processed function " + f + " / " + functionClass.size());
         }
 
         try {
@@ -76,17 +77,11 @@ public class ProgressiveSampling {
                     }
                     csvWriter.writeNext(lineRecord.toArray(new String[lineRecord.size()]));
                 }
-                if (s % 100 == 0) {
-                    System.out.println(s + " / " + samples.size());
-                }
             }
             writer.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
-
     }
 
     /**
