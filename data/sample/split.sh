@@ -18,7 +18,7 @@ do
         count=$((count+1))
         filename=$(basename "${f}")
         echo "Processing $count of $numfiles: $filename"
-        echo "Command: ffmpeg -i $f -f segment -segment_time $segment_time -c copy $outputdir/$name\_$count\_%03d.$filetype -loglevel quiet"
+        echo "Command: ffmpeg -i $f -f segment -segment_time $segment_time -acodec pcm_s16le -ac 1 -ar 48000 $outputdir/$name\_$count\_%03d.wav -loglevel quiet"
         ffmpeg -i "$f" -f segment -segment_time $segment_time -acodec pcm_s16le -ac 1 -ar 48000 $outputdir/$name\_$count\_%03d.wav -loglevel quiet
 done
 
