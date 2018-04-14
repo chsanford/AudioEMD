@@ -2,6 +2,7 @@ package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general;
 
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
+import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.criteria.CompressionRatioCriterion;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,6 +27,53 @@ public class ProgressiveSampling {
         this.complexity = complexity;
     }
 
+
+    /**
+     * merges two properly-formatted CSVs and adjusts the numbers so that the numbering of samples does not conflict
+     */
+    public void mergeCSV(File inputCSV1, File inputCSV2, File outputCSV) {
+        try {
+            Reader reader1 = Files.newBufferedReader(inputCSV1.toPath());
+            CSVReader csvReader1 = new CSVReader(reader1);
+
+            Reader reader2 = Files.newBufferedReader(inputCSV2.toPath());
+            CSVReader csvReader2 = new CSVReader(reader2);
+
+            Writer writer = Files.newBufferedWriter(outputCSV.toPath());
+            CSVWriter csvWriter = new CSVWriter(writer,
+                    CSVWriter.DEFAULT_SEPARATOR,
+                    CSVWriter.NO_QUOTE_CHARACTER,
+                    CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                    CSVWriter.DEFAULT_LINE_END);
+
+            csvWriter.writeNext(csvReader1.readNext());
+            csvReader2.readNext();
+
+            int numSamples1 = 0;
+            String[] nextRecord;
+
+            while ((nextRecord = csvReader1.readNext()) != null) {
+                int s = Integer.valueOf(nextRecord[0]);
+                numSamples1 = Math.max(numSamples1, s + 1);
+                csvWriter.writeNext(nextRecord);
+            }
+
+            while ((nextRecord = csvReader2.readNext()) != null) {
+                nextRecord[0] = String.valueOf(Integer.valueOf(nextRecord[0]) + numSamples1);
+                csvWriter.writeNext(nextRecord);
+            }
+
+            csvReader1.close();
+            csvReader2.close();
+            csvWriter.close();
+
+            reader1.close();
+            reader2.close();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public void fillCSV(
             List<Sample> samples,
@@ -318,6 +366,13 @@ public class ProgressiveSampling {
 
         Double[][][] allCriterionValuesCFS = new Double[criteria.size()][functionClass.size()][numSamples];
 
+        // Generates a permutation to ensure randomness of samples
+        List<Integer> samplePermutation = new ArrayList<>();
+        for (int s = 0; s < numSamples; s++) {
+            samplePermutation.add(s);
+        }
+        java.util.Collections.shuffle(samplePermutation);
+
         try {
             Reader reader = Files.newBufferedReader(inputCSV.toPath());
             CSVReader csvReader = new CSVReader(reader);
@@ -326,10 +381,13 @@ public class ProgressiveSampling {
 
             String[] nextRecord;
             while ((nextRecord = csvReader.readNext()) != null) {
-                int s = Integer.valueOf(nextRecord[0]);
+                int s = samplePermutation.get(Integer.valueOf(nextRecord[0]));
                 int f = Integer.valueOf(nextRecord[2]);
                 for (int c = 0; c < criteria.size(); c++) {
                     allCriterionValuesCFS[c][f][s] = Double.valueOf(nextRecord[3 + c]);
+                    if (criteria.get(c) instanceof CompressionRatioCriterion) {
+                        allCriterionValuesCFS[c][f][s] = allCriterionValuesCFS[c][f][s] * 75 / 32;
+                    }
                 }
             }
         } catch (IOException e) {
@@ -375,9 +433,6 @@ public class ProgressiveSampling {
 
 
         for (int i = 0; i < maxIterations; i++) {
-
-            System.out.println("Iteration " + i + " of " + maxIterations + " (" + sampleSize + " samples)");
-
 
             Double[][][] criterionValuesCFS = new Double[criteria.size()][functionClass.size()][sampleSize];
 
@@ -425,6 +480,8 @@ public class ProgressiveSampling {
                 }
             }
 
+
+            System.out.println("Iteration " + (i + 1) + " of " + maxIterations + " (" + sampleSize + " samples)");
             for (int f = 0; f < functionClass.size(); f++) {
                 String functionStatus = "undetermined";
                 if (constraint.isAlwaysValidRectangle(confidenceIntervalsFC.get(f))) {
@@ -516,6 +573,11 @@ public class ProgressiveSampling {
             if (optimalFIndex != null &&
                     (objective.minRectangle(confidenceIntervalsFC.get(optimalFIndex)) >=
                             objective.maxRectangle(confidenceIntervalsFC.get(optimalFIndex)) - epsilon)) {
+                try {
+                    csvWriter.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 return new AlgorithmSelectionOutput(
                         functionClass.get(optimalFIndex),
                         empiricalMeansFC.get(optimalFIndex),
