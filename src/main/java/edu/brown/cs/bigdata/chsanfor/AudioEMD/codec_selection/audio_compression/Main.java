@@ -1,6 +1,7 @@
 package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression;
 
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.criteria.*;
+import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.encoding_functions.LameConstantMP3EncodingFunction;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.encoding_functions.LameMP3EncodingFunction;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.encoding_functions.MP3EncodingFunction;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.encoding_functions.OggEncodingFunction;
@@ -24,7 +25,7 @@ public class Main {
         System.out.println(option);
 
         int initialSampleSize = 100;
-        double epsilon = 0.05;
+        double epsilon = 0.1;
         double delta = 0.05;
 
         List<Criterion> criteria = Arrays.asList(
@@ -35,15 +36,26 @@ public class Main {
                 new DecodingTimeCriterion()
         );
 
-        List<Function> functionClass = Arrays.asList(
+        /*List<Function> functionClass = Arrays.asList(
                 (Function) new LameMP3EncodingFunction(1, criteria),
+                (Function) new LameMP3EncodingFunction(2, criteria),
                 (Function) new LameMP3EncodingFunction(3, criteria),
+                (Function) new LameMP3EncodingFunction(4, criteria),
                 (Function) new LameMP3EncodingFunction(5, criteria),
+                (Function) new LameMP3EncodingFunction(6, criteria),
                 (Function) new LameMP3EncodingFunction(7, criteria),
+                (Function) new LameMP3EncodingFunction(8, criteria),
                 (Function) new LameMP3EncodingFunction(9, criteria)
+        );*/
+
+        List<Function> functionClass = Arrays.asList(
+                (Function) new LameConstantMP3EncodingFunction(320, criteria),
+                (Function) new LameConstantMP3EncodingFunction(256, criteria),
+                (Function) new LameConstantMP3EncodingFunction(128, criteria),
+                (Function) new LameConstantMP3EncodingFunction(64, criteria)
         );
 
-        Objective objective = new Objective(new double[]{-0.5, 0, -0.5, 0, 0});
+        Objective objective = new Objective(new double[]{-1, 0, -2, 0, 0});
 
         Constraint constraint = new Constraint(
                 new double[][]{{0, 0, 0, 1, 0}, {0, 0, 0, 0, 1}},
@@ -62,7 +74,7 @@ public class Main {
             for (File file : files) audioSamples.add(new AudioSequence(file));
 
             try {
-                AlgorithmSelectionOutput out = ps.runAlgorithm(
+                ps.runAlgorithm(
                         audioSamples,
                         initialSampleSize,
                         functionClass,
@@ -97,7 +109,7 @@ public class Main {
             String sampleCSV = args[2];
             String outCSV = args[3];
             try {
-                AlgorithmSelectionOutput out = ps.runAlgorithm(
+                 ps.runAlgorithm(
                         new File(sampleCSV),
                         new File(outCSV),
                         initialSampleSize,
@@ -112,6 +124,11 @@ public class Main {
                     EmptyConfidenceIntervalException e) {
                 e.printStackTrace();
             }
+        } else if (Objects.equals(option, "merge-csv")) {
+            File csv1 = new File(args[2]);
+            File csv2 = new File(args[3]);
+            File outCSV = new File(args[4]);
+            ps.mergeCSV(csv1, csv2, outCSV);
         }
     }
 }

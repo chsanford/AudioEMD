@@ -1,6 +1,7 @@
-function progressive_sampling_plot()
+function progressive_sampling_plot(fileNum)
 %% Prepares data
-csvMatrix = csvread('../data/out.csv', 1, 0);
+inputFile = sprintf('../data/ps_output/out%d.csv', fileNum);
+csvMatrix = csvread(inputFile, 1, 0);
 iteration = csvMatrix(:,1) + 1;
 numSamples = csvMatrix(:,2);
 fnIndex = csvMatrix(:,3) + 1;
@@ -51,15 +52,20 @@ for f=1:numFn
         objectiveMaxIF(:,f)-objectiveMeanIF(:,f));
     
 end
-xlabel('Number of samples');
-ylabel('Objective value');
-xlim([40, 10000]);
-title('Mean Objectives and Confidence Intervals for Increasing Sample Size');
-legend(fnNames,'Location','southoutside');
+xlabel('Number of samples, $$S_i$$','interpreter','latex');
+objY = sprintf('Objective value, $$V_{%d}(h(x))$$',fileNum);
+ylabel(objY,'interpreter','latex');
+xlim([80, 15000]);
+objTitle = sprintf(...
+        'Mean Objectives $V_{%d}$ and Confidence Intervals for Increasing Sample Size',...
+        fileNum);
+title(objTitle,'interpreter','latex');
+legend(fnNames,'Location','southoutside','interpreter','latex');
 set(gca,'XScale','log');
 hold off;
 
 %% Plot each criterion
+
 for c=1:numCriteria
     figure;
     hold on;
@@ -71,7 +77,7 @@ for c=1:numCriteria
     end
     xlabel('Number of samples');
     ylabel('Criterion Value');
-    xlim([40, 10000]);
+    xlim([80, 15000]);
     critTitle = sprintf(...
         'Mean %s and Confidence Intervals for Increasing Sample Size',...
         criterionNames{c});
