@@ -35,6 +35,7 @@ public class ProgressiveSampling {
         Double[][][] criterionValuesCFS = new Double[criteria.size()][functionClass.size()][samples.size()];
 
         for (int f = 0; f < functionClass.size(); f++) {
+            System.err.println("Processing function " + f + " / " + functionClass.size());
             Function function = functionClass.get(f);
             double[][] criteriaOutput = samples
                     .parallelStream()
@@ -46,7 +47,6 @@ public class ProgressiveSampling {
                     criterionValuesCFS[c][f][s] = criteriaOutput[s][c];
                 }
             }
-            System.err.println("Processed function " + f + " / " + functionClass.size());
         }
 
         try {
