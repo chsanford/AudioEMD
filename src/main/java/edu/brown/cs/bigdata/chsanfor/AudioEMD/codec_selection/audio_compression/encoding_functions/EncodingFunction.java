@@ -33,8 +33,9 @@ public abstract class EncodingFunction extends Function {
 
         String filename = FilenameUtils.getBaseName(audioSample.getFileName());
 
-        File tempCompressed = new File("data/temp/temp_compressed_" + filename + "." + extension);
-        File tempDecompressed = new File("data/temp/temp_decompressed_" + filename + ".wav");
+        long thread_id = java.lang.Thread.currentThread().getId();
+        File tempCompressed = new File("data/temp/temp_compressed_" + filename + "_" + thread_id + "." + extension);
+        File tempDecompressed = new File("data/temp/temp_decompressed_" + filename + "_" + thread_id + ".wav");
 
 
         long startCompressionTime = System.nanoTime();
@@ -44,6 +45,9 @@ public abstract class EncodingFunction extends Function {
         long endDecompressionTime = System.nanoTime();
 
         AudioSequence decompressed = new AudioSequence(tempDecompressed);
+
+        //TODO add this check
+        //assert(audioSample.getSequenceLength() == decompressed.getSequenceLength());
 
         Map<Criterion, Double> criteriaMap2 = new HashMap<>();
 

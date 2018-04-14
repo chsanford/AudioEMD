@@ -13,3 +13,5 @@ To run a typical progressive sampling experiment, where the program learns direc
 To precompute criterion data about a directory of samples, run `mvn exec:java -Dexec.args="codec fill-csv SAMPLE/DIRECTORY OUTPUT/CSV"`. 
 
 To run progressive sampling on the CSV computed in the above procedure and output information into a new CSV, run `mvn exec:java -Dexec.args="codec ps-csv INPUT/CSV OUTPUT/CSV"`.
+
+Ensure all data are in signed 16 bit little endian mono wav at 48000 hz.

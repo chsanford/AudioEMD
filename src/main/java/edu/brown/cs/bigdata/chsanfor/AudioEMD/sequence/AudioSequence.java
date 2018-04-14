@@ -25,17 +25,19 @@ public class AudioSequence implements Sequence, Sample, FunctionOutput {
     }
 
     public double[] getSequence() {
-        double[] sequence = new double[getSequenceLength()];
         try {
             WavFile wavFile = WavFile.openWavFile(audioFile);
-            wavFile.readFrames(sequence, (int) wavFile.getNumFrames());
+            long nf = wavFile.getNumFrames();
+            double[] sequence = new double[(int)nf];
+            wavFile.readFrames(sequence, (int)nf);
             wavFile.close();
+            return sequence;
         } catch (IOException e) {
             e.printStackTrace();
         } catch (WavFileException e) {
             e.printStackTrace();
         }
-        return sequence;
+        return new double[0];
     }
 
     public int getSequenceLength() {

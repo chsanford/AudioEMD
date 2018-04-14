@@ -66,13 +66,7 @@ public class Main {
         ProgressiveSampling ps = new ProgressiveSampling(new OneShotRademacherComplexity());
 
         if (Objects.equals(option, "ps-directory")) {
-            String dirPath = args[2];
-
-            File originalDir = new File(dirPath);
-            File[] files = originalDir.listFiles();
-            List<Sample> audioSamples = new ArrayList<>();
-            for (File file : files) audioSamples.add(new AudioSequence(file));
-
+            List<Sample> audioSamples = loadDataset(args[2]);
             try {
                 ps.runAlgorithm(
                         audioSamples,
@@ -88,23 +82,15 @@ public class Main {
                     EmptyConfidenceIntervalException e) {
                 e.printStackTrace();
             }
-
         } else if (Objects.equals(option, "fill-csv")) {
-            String dirPath = args[2];
+            List<Sample> audioSamples = loadDataset(args[2]);
             String sampleCSV = args[3];
-
-            File originalDir = new File(dirPath);
-            File[] files = originalDir.listFiles();
-            List<Sample> audioSamples = new ArrayList<>();
-            for (File file : files) audioSamples.add(new AudioSequence(file));
-
             ps.fillCSV(
                     audioSamples,
                     functionClass,
                     criteria,
                     new File(sampleCSV)
             );
-
         } else if (Objects.equals(option, "ps-csv")) {
             String sampleCSV = args[2];
             String outCSV = args[3];
@@ -130,5 +116,26 @@ public class Main {
             File outCSV = new File(args[4]);
             ps.mergeCSV(csv1, csv2, outCSV);
         }
+    }
+
+    //Loading Datasets:
+    public static List<Sample> loadDataset(List<String> directories, String filter) {
+        List<Sample> samples = new ArrayList<>();
+        for(String d : directories) {
+            for(File f : new File(d).listFiles()) {
+                if(filter.equals("") || f.getName().matches(filter)) {
+                    samples.add(new AudioSequence(f));
+                }
+            }
+        }
+        return samples;
+    }
+    public static List<Sample> loadDataset(List<String> directories) {
+        return loadDataset(directories, "");
+    }
+    public static List<Sample> loadDataset(String directory) {
+        List<String> l = new ArrayList<String>();
+        l.add(directory);
+        return loadDataset(l);
     }
 }
