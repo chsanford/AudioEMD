@@ -4,14 +4,9 @@ import edu.brown.cs.bigdata.chsanfor.AudioEMD.denoising.DenoisingAlgorithm;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.matching.ClusterMatchingAudio;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.matching.NoiseCleanPair;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.sequence.AudioSequence;
-import ilog.concert.IloException;
-import ilog.concert.IloNumExpr;
-import ilog.concert.IloNumVar;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.linear.MatrixUtils;
-
-import ilog.cplex.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -107,7 +102,9 @@ public class LearningAudioDenoising {
             trainingNoisyCleanPair.removeNoisyFile();
         }
 
+        /*
         try {
+
             // uses CPLEX to solve a quadratic program to minimize the error of a weighted combination of
             // denoising algorithms
             IloCplex cplex = new IloCplex();
@@ -136,7 +133,8 @@ public class LearningAudioDenoising {
         } catch (IloException e) {
             e.printStackTrace();
             return null;
-        }
+        }*/
+        return null;
 
 
     }
