@@ -36,24 +36,32 @@ public class Main {
                 new DecodingTimeCriterion()
         );
 
-        /*List<Function> functionClass = Arrays.asList(
-                (Function) new LameMP3EncodingFunction(1, criteria),
-                (Function) new LameMP3EncodingFunction(2, criteria),
-                (Function) new LameMP3EncodingFunction(3, criteria),
-                (Function) new LameMP3EncodingFunction(4, criteria),
-                (Function) new LameMP3EncodingFunction(5, criteria),
-                (Function) new LameMP3EncodingFunction(6, criteria),
-                (Function) new LameMP3EncodingFunction(7, criteria),
-                (Function) new LameMP3EncodingFunction(8, criteria),
-                (Function) new LameMP3EncodingFunction(9, criteria)
-        );*/
-
         List<Function> functionClass = Arrays.asList(
+                (Function) new LameMP3EncodingFunction(1, criteria),
+                //(Function) new LameMP3EncodingFunction(2, criteria),
+                (Function) new LameMP3EncodingFunction(3, criteria),
+                //(Function) new LameMP3EncodingFunction(4, criteria),
+                (Function) new LameMP3EncodingFunction(5, criteria),
+                //(Function) new LameMP3EncodingFunction(6, criteria),
+                (Function) new LameMP3EncodingFunction(7, criteria),
+                //(Function) new LameMP3EncodingFunction(8, criteria),
+                (Function) new LameMP3EncodingFunction(9, criteria)
+<<<<<<< HEAD
+        );
+
+        /*List<Function> functionClass = Arrays.asList(
                 (Function) new LameConstantMP3EncodingFunction(320, criteria),
                 (Function) new LameConstantMP3EncodingFunction(256, criteria),
                 (Function) new LameConstantMP3EncodingFunction(128, criteria),
                 (Function) new LameConstantMP3EncodingFunction(64, criteria)
+        );*/
+=======
+                //(Function) new LameConstantMP3EncodingFunction(320, criteria),
+                //(Function) new LameConstantMP3EncodingFunction(256, criteria),
+                //(Function) new LameConstantMP3EncodingFunction(128, criteria),
+                //(Function) new LameConstantMP3EncodingFunction(64, criteria)
         );
+>>>>>>> 59b1eb3e0703b00f15de5020021a67319b0e6482
 
         Objective objective = new Objective(new double[]{-1, 0, -2, 0, 0});
 
@@ -63,12 +71,13 @@ public class Main {
         );
 
         BruteForce bf = new BruteForce(new OneShotRademacherComplexity());
-        ProgressiveSampling ps = new ProgressiveSampling(new OneShotRademacherComplexity());
+        ProgressiveSampling psERC = new ProgressiveSampling(new OneShotRademacherComplexity());
+        ProgressiveSampling psEMD = new ProgressiveSampling(new EMDComplexity());
 
         if (Objects.equals(option, "ps-directory")) {
             List<Sample> audioSamples = loadDataset(args[2]);
             try {
-                ps.runAlgorithm(
+                psERC.runAlgorithm(
                         audioSamples,
                         initialSampleSize,
                         functionClass,
@@ -85,7 +94,7 @@ public class Main {
         } else if (Objects.equals(option, "fill-csv")) {
             List<Sample> audioSamples = loadDataset(args[2]);
             String sampleCSV = args[3];
-            ps.fillCSV(
+            psERC.fillCSV(
                     audioSamples,
                     functionClass,
                     criteria,
@@ -95,7 +104,7 @@ public class Main {
             String sampleCSV = args[2];
             String outCSV = args[3];
             try {
-                 ps.runAlgorithm(
+                 psEMD.runAlgorithm(
                         new File(sampleCSV),
                         new File(outCSV),
                         initialSampleSize,
@@ -110,11 +119,16 @@ public class Main {
                     EmptyConfidenceIntervalException e) {
                 e.printStackTrace();
             }
-        } else if (Objects.equals(option, "merge-csv")) {
+        } else if (Objects.equals(option, "merge-csv-samples")) {
             File csv1 = new File(args[2]);
             File csv2 = new File(args[3]);
             File outCSV = new File(args[4]);
-            ps.mergeCSV(csv1, csv2, outCSV);
+            psERC.mergeCSVSamples(csv1, csv2, outCSV);
+        } else if (Objects.equals(option, "merge-csv-functions")) {
+            File csv1 = new File(args[2]);
+            File csv2 = new File(args[3]);
+            File outCSV = new File(args[4]);
+            psERC.mergeCSVFunctions(csv1, csv2, outCSV);
         }
     }
 

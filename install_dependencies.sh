@@ -7,7 +7,7 @@ set -e
 
 #Attempt to install these from the command line.
 
-packages="git autoconf make sox maven git2cl gtk-doc-tools"
+packages="git autoconf make sox maven git2cl gtk-doc-tools libav-tools ffmpeg ffmpeg2theora libmp3lame0"
 
 #peaq may also want these:
 #git2cl gtk-doc-tools w3-dtd-mathml libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-tools gstreamer1.0-plugins-base
