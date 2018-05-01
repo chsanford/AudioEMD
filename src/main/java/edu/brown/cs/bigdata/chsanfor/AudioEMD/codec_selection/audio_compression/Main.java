@@ -45,23 +45,7 @@ public class Main {
                 //(Function) new LameMP3EncodingFunction(6, criteria),
                 (Function) new LameMP3EncodingFunction(7, criteria),
                 //(Function) new LameMP3EncodingFunction(8, criteria),
-                (Function) new LameMP3EncodingFunction(9, criteria)
-<<<<<<< HEAD
-        );
-
-        /*List<Function> functionClass = Arrays.asList(
-                (Function) new LameConstantMP3EncodingFunction(320, criteria),
-                (Function) new LameConstantMP3EncodingFunction(256, criteria),
-                (Function) new LameConstantMP3EncodingFunction(128, criteria),
-                (Function) new LameConstantMP3EncodingFunction(64, criteria)
-        );*/
-=======
-                //(Function) new LameConstantMP3EncodingFunction(320, criteria),
-                //(Function) new LameConstantMP3EncodingFunction(256, criteria),
-                //(Function) new LameConstantMP3EncodingFunction(128, criteria),
-                //(Function) new LameConstantMP3EncodingFunction(64, criteria)
-        );
->>>>>>> 59b1eb3e0703b00f15de5020021a67319b0e6482
+                (Function) new LameMP3EncodingFunction(9, criteria));
 
         Objective objective = new Objective(new double[]{-1, 0, -2, 0, 0});
 

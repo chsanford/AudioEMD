@@ -47,8 +47,8 @@ public class PEAQObjectiveDifferenceCriterion extends WavDivergenceCriterion {
             //System.out.println(Math.min(Math.max(objectiveDifferenceGrade / -4, 0), 1));
             return Math.min(Math.max(objectiveDifferenceGrade / -4, 0), 1);
         } catch (InterruptedException | IOException | NumberFormatException e) {
-            System.out.println(e.toString());
-            return 0;
+            e.printStackTrace();
+            return 1;
         }
 
     }
