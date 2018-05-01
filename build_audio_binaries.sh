@@ -25,8 +25,7 @@ set -e
 (
   cd comparison_algs/gstpeaq
   ./autogen.sh
-  ./configure
-  #./configure --with-gstreamer=1.0 --enable-man
+  #./configure --enable-man #This is called by ./autogen.sh
   make
   #sudo make install
 )
