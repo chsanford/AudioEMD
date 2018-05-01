@@ -29,7 +29,7 @@ for f=1:numFn
 end
 xlabel('PEAQ', 'interpreter', 'latex');
 ylabel('Compression Ratio (Scaled up)', 'interpreter', 'latex');
-legend(fnNames,'Location','southoutside','interpreter','latex');
+legend(fnNames,'Location','northeast','interpreter','latex');
 xlim([-0.1, 1.1]);
 ylim([-0.1, 1.1]);
 
