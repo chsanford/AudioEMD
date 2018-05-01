@@ -1,5 +1,9 @@
 #! /bin/bash
 
+#This script pulls the source code of several dependent programs that deal with audio.
+#In most cases it will update existing source code by pulling the latest version from a remote repository.
+#These files can be removed (along with any of their binaries compiled with compile_audio_sources) with delete_audio_sources.sh
+
 set -e
 
 mkdir -p denoising_algs
