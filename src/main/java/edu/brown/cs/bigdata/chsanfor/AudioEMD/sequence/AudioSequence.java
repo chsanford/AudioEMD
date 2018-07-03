@@ -91,6 +91,21 @@ public class AudioSequence implements Sequence, Sample, FunctionOutput {
         return audioFile.getName();
     }
 
+    /**
+     * Obtains the duration of the file in seconds
+     * @return a double representing how many seconds the audio file takes
+     */
+    public double getDuration() {
+        try {
+            WavFile wavFile = WavFile.openWavFile(audioFile);
+            return 1. * wavFile.getNumFrames() / wavFile.getSampleRate();
+        } catch (IOException | WavFileException e) {
+            e.printStackTrace();
+            return 0;
+        }
+
+    }
+
     @Override
     public void delete() {
         audioFile.delete();

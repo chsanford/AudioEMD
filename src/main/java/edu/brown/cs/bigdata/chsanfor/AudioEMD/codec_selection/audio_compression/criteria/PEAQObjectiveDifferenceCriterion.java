@@ -32,6 +32,8 @@ public class PEAQObjectiveDifferenceCriterion extends WavDivergenceCriterion {
 
     @Override
     public double computeCriterion(AudioSequence originalSeq, AudioSequence decompressedSeq) {
+        BufferedReader br = null;
+        String firstLine = "";
         try {
             Process proc = runtime.exec(
                     "./comparison_algs/gstpeaq/src/peaq --basic" +
@@ -40,14 +42,22 @@ public class PEAQObjectiveDifferenceCriterion extends WavDivergenceCriterion {
                             originalSeq.getAudioFile().getAbsolutePath());
             proc.waitFor();
             InputStream outputText = proc.getInputStream();
-            BufferedReader br = new BufferedReader(new InputStreamReader(outputText));
-            String firstLine = br.readLine();
+            br = new BufferedReader(new InputStreamReader(outputText));
+            firstLine = br.readLine();
             String objectiveDifferenceGradeStr = firstLine.split("\\s+")[3];
             double objectiveDifferenceGrade = Double.valueOf(objectiveDifferenceGradeStr);
             //System.out.println(Math.min(Math.max(objectiveDifferenceGrade / -4, 0), 1));
             return Math.min(Math.max(objectiveDifferenceGrade / -4, 0), 1);
         } catch (InterruptedException | IOException | NumberFormatException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
+            System.out.println(firstLine);
+            /*String line;
+            try {
+                while ((line = br.readLine()) != null) {
+                    System.out.println(line);
+                }
+                System.out.println(originalSeq.getAudioFile().getAbsolutePath());*/
+            System.out.println("NaN Error: " + originalSeq.getDuration() + " " + originalSeq.getFileName());
             return 1;
         }
 

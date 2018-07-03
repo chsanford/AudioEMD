@@ -1,10 +1,7 @@
 package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression;
 
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.criteria.*;
-import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.encoding_functions.LameConstantMP3EncodingFunction;
-import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.encoding_functions.LameMP3EncodingFunction;
-import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.encoding_functions.MP3EncodingFunction;
-import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.encoding_functions.OggEncodingFunction;
+import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.encoding_functions.*;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.*;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.sequence.AudioSequence;
 
@@ -37,15 +34,17 @@ public class Main {
         );
 
         List<Function> functionClass = Arrays.asList(
-                (Function) new LameMP3EncodingFunction(1, criteria),
+                //(Function) new LameMP3EncodingFunction(1, criteria),
                 //(Function) new LameMP3EncodingFunction(2, criteria),
-                (Function) new LameMP3EncodingFunction(3, criteria),
+                //(Function) new LameMP3EncodingFunction(3, criteria),
                 //(Function) new LameMP3EncodingFunction(4, criteria),
-                (Function) new LameMP3EncodingFunction(5, criteria),
+                //(Function) new LameMP3EncodingFunction(5, criteria),
                 //(Function) new LameMP3EncodingFunction(6, criteria),
-                (Function) new LameMP3EncodingFunction(7, criteria),
+                //(Function) new LameMP3EncodingFunction(7, criteria),
                 //(Function) new LameMP3EncodingFunction(8, criteria),
-                (Function) new LameMP3EncodingFunction(9, criteria));
+                //(Function) new LameMP3EncodingFunction(9, criteria),
+                (Function) new Codec2EncodingFunction(1200, criteria),
+                (Function) new Codec2EncodingFunction(3200, criteria));
 
         Objective objective = new Objective(new double[]{-1, 0, -2, 0, 0});
 
@@ -132,7 +131,7 @@ public class Main {
         return loadDataset(directories, "");
     }
     public static List<Sample> loadDataset(String directory) {
-        List<String> l = new ArrayList<String>();
+        List<String> l = new ArrayList<>();
         l.add(directory);
         return loadDataset(l);
     }
