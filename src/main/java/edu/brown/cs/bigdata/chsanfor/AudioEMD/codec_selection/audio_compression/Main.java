@@ -34,19 +34,23 @@ public class Main {
         );
 
         List<Function> functionClass = Arrays.asList(
-                //(Function) new LameMP3EncodingFunction(1, criteria),
-                //(Function) new LameMP3EncodingFunction(2, criteria),
-                //(Function) new LameMP3EncodingFunction(3, criteria),
-                //(Function) new LameMP3EncodingFunction(4, criteria),
-                //(Function) new LameMP3EncodingFunction(5, criteria),
-                //(Function) new LameMP3EncodingFunction(6, criteria),
-                //(Function) new LameMP3EncodingFunction(7, criteria),
-                //(Function) new LameMP3EncodingFunction(8, criteria),
-                //(Function) new LameMP3EncodingFunction(9, criteria),
-                (Function) new Codec2EncodingFunction(1200, criteria),
-                (Function) new Codec2EncodingFunction(3200, criteria));
+                (Function) new LameMP3EncodingFunction(1, criteria),
+                (Function) new LameMP3EncodingFunction(2, criteria),
+                (Function) new LameMP3EncodingFunction(3, criteria),
+                (Function) new LameMP3EncodingFunction(4, criteria),
+                (Function) new LameMP3EncodingFunction(5, criteria),
+                (Function) new LameMP3EncodingFunction(6, criteria),
+                (Function) new LameMP3EncodingFunction(7, criteria),
+                (Function) new LameMP3EncodingFunction(8, criteria),
+                (Function) new LameMP3EncodingFunction(9, criteria),
+                (Function) new LameConstantMP3EncodingFunction(320, criteria),
+                (Function) new LameConstantMP3EncodingFunction(256, criteria),
+                (Function) new LameConstantMP3EncodingFunction(128, criteria),
+                (Function) new LameConstantMP3EncodingFunction(64, criteria));
+                //(Function) new Codec2EncodingFunction(1200, criteria),
+                //(Function) new Codec2EncodingFunction(3200, criteria));
 
-        Objective objective = new Objective(new double[]{-1, 0, -2, 0, 0});
+        Objective objective = new Objective(new double[]{0, 0, 1, 0, 0});
 
         Constraint constraint = new Constraint(
                 new double[][]{{0, 0, 0, 1, 0}, {0, 0, 0, 0, 1}},

@@ -1,0 +1,112 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import sys
+
+assert len(sys.argv) > 0
+
+#FILE NAME GOES HERE
+#input_file = "../data/no_nan_criteria/ps_out1.csv"
+input_file = sys.argv[1]
+print(input_file)
+
+ps_dataset = pd.read_csv(input_file)
+
+function_names = ['Lame MP3 Compression V1', 'Lame MP3 Compression V2',
+	'Lame MP3 Compression V3', 'Lame MP3 Compression V4',
+	'Lame MP3 Compression V5', 'Lame MP3 Compression V6',
+	'Lame MP3 Compression V7', 'Lame MP3 Compression V8',
+	'Lame MP3 Compression V9']
+
+criterion_names = ['PEAQ Objective Difference', 'Root Mean Squared Error',
+    'Compression Ratio', 'Compression Time', 'Decompression Time']
+
+num_iterations = max(ps_dataset.ITERATION) + 1
+num_functions = max(ps_dataset.FUNCTION_INDEX) + 1
+num_criteria = max(ps_dataset.CRITERION_INDEX) + 1
+
+num_samples_I = np.full(num_iterations, np.nan)
+obj_mean_IF = np.full((num_iterations, num_functions), np.nan)
+obj_min_IF = np.full((num_iterations, num_functions), np.nan)
+obj_max_IF = np.full((num_iterations, num_functions), np.nan)
+crit_mean_IFC = np.full((num_iterations, num_functions, num_criteria), np.nan)
+crit_min_IFC = np.full((num_iterations, num_functions, num_criteria), np.nan)
+crit_max_IFC = np.full((num_iterations, num_functions, num_criteria), np.nan)
+
+for _, row in ps_dataset.iterrows():
+	i = int(row['ITERATION'])
+	f = int(row['FUNCTION_INDEX'])
+	c = int(row['CRITERION_INDEX'])
+	num_samples_I[i] = row['NUMBER_SAMPLES']
+	obj_mean_IF[i, f] = row['OBJECTIVE_MEAN']
+	obj_min_IF[i, f] = row['OBJECTIVE_MIN']
+	obj_max_IF[i, f] = row['OBJECTIVE_MAX']
+	crit_mean_IFC[i, f, c] = row['CRITERION_MEAN']
+	crit_min_IFC[i, f, c] = row['CRITERION_MIN']
+	crit_max_IFC[i, f, c] = row['CRITERION_MAX']
+
+# num_samples_I = np.asarray(
+# 	[ps_dataset.NUMBER_SAMPLES[i * num_functions * num_criteria] \
+# 	for i in range(num_iterations)])
+
+# obj_mean_IF = np.asarray([[
+# 	ps_dataset.OBJECTIVE_MEAN[i * num_functions * num_criteria + f * num_criteria]
+# 	for f in range(num_functions)]
+# 	for i in range(num_iterations)])
+# obj_min_IF = np.asarray([[
+# 	ps_dataset.OBJECTIVE_MIN[i * num_functions * num_criteria + f * num_criteria]
+# 	for f in range(num_functions)]
+# 	for i in range(num_iterations)])
+# obj_max_IF = np.asarray([[
+# 	ps_dataset.OBJECTIVE_MAX[i * num_functions * num_criteria + f * num_criteria]
+# 	for f in range(num_functions)]
+# 	for i in range(num_iterations)])
+
+# crit_mean_IFC = np.asarray([[[
+# 	ps_dataset.CRITERION_MEAN[i * num_functions * num_criteria + f * num_criteria + c]
+# 	for c in range(num_criteria)]
+# 	for f in range(num_functions)]
+# 	for i in range(num_iterations)])
+# crit_min_IFC = np.asarray([[[
+# 	ps_dataset.CRITERION_MIN[i * num_functions * num_criteria + f * num_criteria + c]
+# 	for c in range(num_criteria)]
+# 	for f in range(num_functions)]
+# 	for i in range(num_iterations)])
+# crit_max_IFC = np.asarray([[[
+# 	ps_dataset.CRITERION_MAX[i * num_functions * num_criteria + f * num_criteria + c]
+# 	for c in range(num_criteria)]
+# 	for f in range(num_functions)]
+# 	for i in range(num_iterations)])
+
+fig, ax = plt.subplots()
+for f in range(num_functions):
+	plt.errorbar(
+		num_samples_I * (1 + 0.012 * f),
+		obj_mean_IF[:, f],
+		np.asarray([
+			obj_mean_IF[:, f] - obj_min_IF[:, f],
+			obj_max_IF[:, f] - obj_mean_IF[:, f]]))
+ax.semilogx()
+plt.xlabel("Sample Size")
+plt.ylabel("Objective Value")
+plt.title("Mean Objectives and Confidence Intervals for Increasing Sample Size")
+plt.legend(function_names)
+plt.show()
+
+for c in range(num_criteria):
+	fig, ax = plt.subplots()
+	for f in range(num_functions):
+		plt.errorbar(
+			num_samples_I * (1 + 0.012 * f),
+			crit_mean_IFC[:, f, c],
+			np.asarray([
+				crit_mean_IFC[:, f, c] - crit_min_IFC[:, f, c],
+				crit_max_IFC[:, f, c] - crit_mean_IFC[:, f, c]]))
+	ax.semilogx()
+	plt.xlabel("Sample Size")
+	plt.ylabel("Criteria Value")
+	plt.title("Mean Criteria " + criterion_names[c] + 
+		" and Confidence Intervals for Increasing Sample Size")
+	plt.legend(function_names)
+	plt.show()
+

@@ -4,13 +4,17 @@ public class AlgorithmSelectionOutput {
     private Function optimalFunction;
     private Double[] optimalCriteriaMeansC;
     private ConfidenceInterval[] optimalCriteriaConfidenceIntervalsC;
-    private double upperBound;
+    private double lowerBound;
 
-    public AlgorithmSelectionOutput(Function optimalFunction, Double[] optimalCriteriaMeansC, ConfidenceInterval[] optimalCriteriaConfidenceIntervalsC, double upperBound) {
+    public AlgorithmSelectionOutput(
+            Function optimalFunction,
+            Double[] optimalCriteriaMeansC,
+            ConfidenceInterval[] optimalCriteriaConfidenceIntervalsC,
+            double lowerBound) {
         this.optimalFunction = optimalFunction;
         this.optimalCriteriaMeansC = optimalCriteriaMeansC;
         this.optimalCriteriaConfidenceIntervalsC = optimalCriteriaConfidenceIntervalsC;
-        this.upperBound = upperBound;
+        this.lowerBound = lowerBound;
     }
 
     public Function getOptimalFunction() {
@@ -25,7 +29,7 @@ public class AlgorithmSelectionOutput {
         return optimalCriteriaConfidenceIntervalsC;
     }
 
-    public double getUpperBound() {
-        return upperBound;
+    public double getLowerBound() {
+        return lowerBound;
     }
 }

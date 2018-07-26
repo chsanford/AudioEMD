@@ -49,7 +49,7 @@ public class Main {
                     0.05);
 
             System.out.println("Best algorithm: " + out.getOptimalFunction().toString());
-            System.out.println("Objective upper bound: " + out.getUpperBound());
+            System.out.println("Objective upper bound: " + out.getLowerBound());
             for (int c = 0; c < criteria.size(); c++) {
                 System.out.println("Criteria " + c + " (" + criteria.get(c).toString() + ") " +
                         out.getOptimalCriteriaMeansC()[c] + " in " +

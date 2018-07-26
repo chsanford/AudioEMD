@@ -160,15 +160,24 @@ public class ProgressiveSampling {
             csvWriter.writeNext(headerRecord.toArray(new String[headerRecord.size()]));
 
             for (int s = 0; s < samples.size(); s++) {
+                // If one of the criteria is invalid (value of -1), filter the line
+                boolean validSample = true;
                 for (int f = 0; f < functionClass.size(); f++) {
-                    List<String> lineRecord = new ArrayList<>();
-                    lineRecord.add(String.valueOf(s));
-                    lineRecord.add(functionClass.get(f).toString());
-                    lineRecord.add(String.valueOf(f));
                     for (int c = 0; c < criteria.size(); c++) {
-                        lineRecord.add(String.valueOf(criterionValuesCFS[c][f][s]));
+                        validSample = validSample && (criterionValuesCFS[c][f][s] != -1);
                     }
-                    csvWriter.writeNext(lineRecord.toArray(new String[lineRecord.size()]));
+                }
+                if (validSample) {
+                    for (int f = 0; f < functionClass.size(); f++) {
+                        List<String> lineRecord = new ArrayList<>();
+                        lineRecord.add(String.valueOf(s));
+                        lineRecord.add(functionClass.get(f).toString());
+                        lineRecord.add(String.valueOf(f));
+                        for (int c = 0; c < criteria.size(); c++) {
+                            lineRecord.add(String.valueOf(criterionValuesCFS[c][f][s]));
+                        }
+                        csvWriter.writeNext(lineRecord.toArray(new String[lineRecord.size()]));
+                    }
                 }
             }
             writer.close();
@@ -177,6 +186,8 @@ public class ProgressiveSampling {
         }
     }
 
+
+    // TODO: Filter NaNs
     /**
      *
      * @param samples a list of sample data points that functions operate on
@@ -299,25 +310,25 @@ public class ProgressiveSampling {
             System.out.println();
 
             Integer optimalFIndex = null;
-            Double optimalLowerBoundF = null;
-            Double maxUpperBound = null;
+            Double optimalUpperBoundF = null;
+            Double minLowerBound = null;
 
             List<Integer> toRemove = new ArrayList<>();
 
             for (int f = 0; f < functionClass.size(); f++) {
-                // For functions that we are confident are valid, we find the one with the greatest lower-bound objective
+                // For functions that we are confident are valid, we find the one with the lowest upper-bound objective
                 if (constraint.isAlwaysValidRectangle(confidenceIntervalsFC.get(f))) {
-                    double lowerBound = objective.minRectangle(confidenceIntervalsFC.get(f));
-                    if (optimalFIndex == null || lowerBound > optimalLowerBoundF) {
-                        optimalLowerBoundF = lowerBound;
+                    double upperBound = objective.maxRectangle(confidenceIntervalsFC.get(f));
+                    if (optimalFIndex == null || upperBound < optimalUpperBoundF) {
+                        optimalUpperBoundF = upperBound;
                         optimalFIndex = f;
                     }
                 }
-                // For functions that may be valid, then we find an upper bound on the objective function
+                // For functions that may be valid, then we find a lower bound on the objective function
                 if (!constraint.isNeverValidRectangle(confidenceIntervalsFC.get(f))) {
-                    double upperBound = objective.maxRectangle(confidenceIntervalsFC.get(f));
-                    if (maxUpperBound == null || upperBound > maxUpperBound) {
-                        maxUpperBound = upperBound;
+                    double lowerBound = objective.maxRectangle(confidenceIntervalsFC.get(f));
+                    if (minLowerBound == null || lowerBound > minLowerBound) {
+                        minLowerBound = lowerBound;
                     }
                 } else {
                     // Remove as a valid function if no intersection with viable region
@@ -327,8 +338,8 @@ public class ProgressiveSampling {
 
             if (optimalFIndex != null) {
                 for (int f = 0; f < functionClass.size(); f++) {
-                    if ((objective.maxRectangle(confidenceIntervalsFC.get(f)) <
-                            objective.minRectangle(confidenceIntervalsFC.get(optimalFIndex)))
+                    if ((objective.minRectangle(confidenceIntervalsFC.get(f)) >
+                            objective.maxRectangle(confidenceIntervalsFC.get(optimalFIndex)))
                             && !toRemove.contains(f)) {
                         toRemove.add(f);
                     }
@@ -351,13 +362,13 @@ public class ProgressiveSampling {
             }
 
             if (optimalFIndex != null &&
-                    (objective.minRectangle(confidenceIntervalsFC.get(optimalFIndex)) >=
-                    objective.maxRectangle(confidenceIntervalsFC.get(optimalFIndex)) - epsilon)) {
+                    (objective.maxRectangle(confidenceIntervalsFC.get(optimalFIndex)) <=
+                    objective.minRectangle(confidenceIntervalsFC.get(optimalFIndex)) + epsilon)) {
                 return new AlgorithmSelectionOutput(
                         functionClass.get(optimalFIndex),
                         empiricalMeansFC.get(optimalFIndex),
                         confidenceIntervalsFC.get(optimalFIndex),
-                        maxUpperBound);
+                        minLowerBound);
             }
 
             functionClass = prunedFunctionClass;
@@ -390,17 +401,23 @@ public class ProgressiveSampling {
 
         // counts the number of samples
         int numSamples = 0;
+        List<Integer> sampleIndices = new ArrayList<>();
         try {
             Reader reader = Files.newBufferedReader(inputCSV.toPath());
             CSVReader csvCounter = new CSVReader(reader);
 
             csvCounter.readNext();
 
+            int totalLines = 0;
             String[] nextRecord;
             while ((nextRecord = csvCounter.readNext()) != null) {
+                totalLines++;
                 int s = Integer.valueOf(nextRecord[0]);
-                numSamples = Math.max(numSamples, s + 1);
+                if (!sampleIndices.contains(s)) {
+                    sampleIndices.add(s);
+                }
             }
+            numSamples = totalLines / functionClass.size();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -426,20 +443,9 @@ public class ProgressiveSampling {
 
             String[] nextRecord;
             while ((nextRecord = csvReader.readNext()) != null) {
-                int s = samplePermutation.get(Integer.valueOf(nextRecord[0]));
+                int s = samplePermutation.get(sampleIndices.indexOf(Integer.valueOf(nextRecord[0])));
                 int f = Integer.valueOf(nextRecord[2]);
-                /*// TEMPORARY HACK: Remove later
-                if (f < 9 || f > 11) {
-                    if (f == 12) {
-                        f = 9;
-                    }
-                    for (int c = 0; c < criteria.size(); c++) {
-                        allCriterionValuesCFS[c][f][s] = Double.valueOf(nextRecord[3 + c]);
-                        if (criteria.get(c) instanceof CompressionRatioCriterion) {
-                            allCriterionValuesCFS[c][f][s] = Math.min(1, allCriterionValuesCFS[c][f][s] * 75. / 32.);
-                        }
-                    }
-                }*/
+
                 for (int c = 0; c < criteria.size(); c++) {
                     allCriterionValuesCFS[c][f][s] = Double.valueOf(nextRecord[3 + c]);
                     if (criteria.get(c) instanceof CompressionRatioCriterion) {
@@ -493,7 +499,9 @@ public class ProgressiveSampling {
 
         for (int f = 0; f < functionClass.size(); f++) {
             for (int s = 0; s < numSamples; s++) {
-                if (allCriterionValuesCFS[0][f][s] == 0) numZeros[f]++;
+                if (allCriterionValuesCFS[0][f][s] == 0) {
+                    numZeros[f]++;
+                }
             }
 
         }
@@ -518,28 +526,6 @@ public class ProgressiveSampling {
 
                     // Estimates the value of each criterion for each function
                     empiricalMeansFC.get(f)[c] = 0.;
-                    /*if (criteria.get(c) instanceof PEAQObjectiveDifferenceCriterion) {
-                        // For PEAQ, tentatively addresses the NaN error by switching all 0's to the mean of the others
-                        double sumCriterion = 0;
-                        double nonZeroSampleSize = sampleSize;
-                        for (double v : criterionValuesCFS[c][f]) {
-                            sumCriterion += v;
-                            if (v == 0) {
-                                nonZeroSampleSize -= 1;
-                            }
-                        }
-                        System.out.println(nonZeroSampleSize);
-                        empiricalMeansFC.get(f)[c] = sumCriterion / nonZeroSampleSize;
-                        for (int s = 0; s < sampleSize; s++) {
-                            if (criterionValuesCFS[c][f][s] == 0) {
-                                criterionValuesCFS[c][f][s] = empiricalMeansFC.get(f)[c];
-                            }
-                        }
-                    } else {
-                        for (double v : criterionValuesCFS[c][f]) {
-                            empiricalMeansFC.get(f)[c] += (v / sampleSize);
-                        }
-                    }*/
 
                     for (double v : criterionValuesCFS[c][f]) {
                         empiricalMeansFC.get(f)[c] += (v / sampleSize);
@@ -555,10 +541,6 @@ public class ProgressiveSampling {
                     if (confidenceIntervalsFC.get(f)[c] == null) {
                         confidenceIntervalsFC.get(f)[c] = newInterval;
                     } else {
-                        /*confidenceIntervalsFC.get(f)[c] = new ConfidenceInterval(
-                                newInterval.getDelta(),
-                                Math.min(confidenceIntervalsFC.get(f)[c].getUpperBound(), newInterval.getUpperBound()),
-                                Math.max(confidenceIntervalsFC.get(f)[c].getLowerBound(), newInterval.getLowerBound()));*/
                         confidenceIntervalsFC.get(f)[c] = newInterval;
                     }
                     if (confidenceIntervalsFC.get(f)[c].getLowerBound() >
@@ -614,25 +596,25 @@ public class ProgressiveSampling {
             System.out.println();
 
             Integer optimalFIndex = null;
-            Double optimalLowerBoundF = null;
-            Double maxUpperBound = null;
+            Double optimalUpperBoundF = null;
+            Double minLowerBound = null;
 
             List<Integer> toRemove = new ArrayList<>();
 
             for (int f = 0; f < functionClass.size(); f++) {
-                // For functions that we are confident are valid, we find the one with the greatest lower-bound objective
+                // For functions that we are confident are valid, we find the one with the lowest upper-bound objective
                 if (constraint.isAlwaysValidRectangle(confidenceIntervalsFC.get(f))) {
-                    double lowerBound = objective.minRectangle(confidenceIntervalsFC.get(f));
-                    if (optimalFIndex == null || lowerBound > optimalLowerBoundF) {
-                        optimalLowerBoundF = lowerBound;
+                    double upperBound = objective.maxRectangle(confidenceIntervalsFC.get(f));
+                    if (optimalFIndex == null || upperBound < optimalUpperBoundF) {
+                        optimalUpperBoundF = upperBound;
                         optimalFIndex = f;
                     }
                 }
-                // For functions that may be valid, then we find an upper bound on the objective function
+                // For functions that may be valid, then we find a lower bound on the objective function
                 if (!constraint.isNeverValidRectangle(confidenceIntervalsFC.get(f))) {
-                    double upperBound = objective.maxRectangle(confidenceIntervalsFC.get(f));
-                    if (maxUpperBound == null || upperBound > maxUpperBound) {
-                        maxUpperBound = upperBound;
+                    double lowerBound = objective.minRectangle(confidenceIntervalsFC.get(f));
+                    if (minLowerBound == null || lowerBound > minLowerBound) {
+                        minLowerBound = lowerBound;
                     }
                 } else {
                     // Remove as a valid function if no intersection with viable region
@@ -642,8 +624,8 @@ public class ProgressiveSampling {
 
             if (optimalFIndex != null) {
                 for (int f = 0; f < functionClass.size(); f++) {
-                    if ((objective.maxRectangle(confidenceIntervalsFC.get(f)) <
-                            objective.minRectangle(confidenceIntervalsFC.get(optimalFIndex)))
+                    if ((objective.minRectangle(confidenceIntervalsFC.get(f)) >
+                            objective.maxRectangle(confidenceIntervalsFC.get(optimalFIndex)))
                             && !toRemove.contains(f)) {
                         toRemove.add(f);
                     }
@@ -666,8 +648,8 @@ public class ProgressiveSampling {
             }
 
             if (optimalFIndex != null &&
-                    (objective.minRectangle(confidenceIntervalsFC.get(optimalFIndex)) >=
-                            objective.maxRectangle(confidenceIntervalsFC.get(optimalFIndex)) - epsilon)) {
+                    (objective.maxRectangle(confidenceIntervalsFC.get(optimalFIndex)) <=
+                            objective.minRectangle(confidenceIntervalsFC.get(optimalFIndex)) + epsilon)) {
                 try {
                     writer.close();
                     csvWriter.close();
@@ -678,7 +660,7 @@ public class ProgressiveSampling {
                         functionClass.get(optimalFIndex),
                         empiricalMeansFC.get(optimalFIndex),
                         confidenceIntervalsFC.get(optimalFIndex),
-                        maxUpperBound);
+                        minLowerBound);
             }
 
             functionClass = prunedFunctionClass;

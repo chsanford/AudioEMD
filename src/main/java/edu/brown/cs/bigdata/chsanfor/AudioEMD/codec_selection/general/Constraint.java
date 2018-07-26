@@ -100,7 +100,7 @@ public class Constraint {
             double[] vertex = new double[confidenceIntervalsC.length];
             for (int j = 0; i < confidenceIntervalsC.length; j++) {
                 if ((i / Math.pow(2, j) % 2 == 0)) {
-                    vertex[j] = confidenceIntervalsC[j].getUpperBound();
+                    vertex[j] = confidenceIntervalsC[j].getLowerBound();
                 }  else {
                     vertex[j] = confidenceIntervalsC[j].getLowerBound();
                 }
@@ -142,7 +142,7 @@ public class Constraint {
             double[] vertex = new double[confidenceIntervalsC.length];
             for (int j = 0; i < confidenceIntervalsC.length; j++) {
                 if ((i / Math.pow(2, j) % 2 == 0)) {
-                    vertex[j] = confidenceIntervalsC[j].getUpperBound();
+                    vertex[j] = confidenceIntervalsC[j].getLowerBound();
                 }  else {
                     vertex[j] = confidenceIntervalsC[j].getLowerBound();
                 }
