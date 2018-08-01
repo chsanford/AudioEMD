@@ -7,7 +7,7 @@ import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.FunctionOu
 /**
  * Obtains the amount of time needed to compress an audio file
  */
-public class EncodingTimeCriterion extends Criterion {
+public class EncodingTimeCriterion extends MeanCriterion {
     private static String NAME = "COMPRESSION_TIME";
 
     public static String getName() {

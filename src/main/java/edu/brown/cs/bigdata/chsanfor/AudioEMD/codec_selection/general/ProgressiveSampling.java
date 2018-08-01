@@ -2,8 +2,7 @@ package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general;
 
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
-import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.criteria.CompressionRatioCriterion;
-import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.criteria.PEAQObjectiveDifferenceCriterion;
+import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.criteria.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -187,7 +186,6 @@ public class ProgressiveSampling {
     }
 
 
-    // TODO: Filter NaNs
     /**
      *
      * @param samples a list of sample data points that functions operate on
@@ -210,7 +208,7 @@ public class ProgressiveSampling {
             Constraint constraint,
             double epsilon,
             double delta)
-            throws InsufficientSampleSizeException, NoSatisfactoryFunctionsException, EmptyConfidenceIntervalException {
+            throws InsufficientSampleSizeException, NoSatisfactoryFunctionsException, EmptyConfidenceIntervalException, IncorrectlyClassifiedCriterionException {
 
         int firstSample = 0;
         int sampleSize = initialSampleSize;
@@ -232,6 +230,8 @@ public class ProgressiveSampling {
 
             List<Sample> currentSamples = samples.subList(firstSample, firstSample + sampleSize);
             Double[][][] criterionValuesCFS = new Double[criteria.size()][functionClass.size()][currentSamples.size()];
+            firstSample += sampleSize;
+
 
             for (int f = 0; f < functionClass.size(); f++) {
                 Function function = functionClass.get(f);
@@ -242,50 +242,112 @@ public class ProgressiveSampling {
                         .toArray(double[][]::new);
                 for (int s = 0; s < currentSamples.size(); s++) {
                     for (int c = 0; c < criteria.size(); c++) {
-                        //System.out.println(criteriaOutput[s][c]);
                         criterionValuesCFS[c][f][s] = criteriaOutput[s][c];
                     }
                 }
-                /*for (int s = 0; s < currentSamples.size(); s++) {
-                    FunctionOutput fOut = functionClass.get(f).apply(currentSamples.get(s));
+            }
+
+            for (int s = 0; s < currentSamples.size(); s++) {
+
+                boolean validSample = true;
+                for (int f = 0; f < functionClass.size(); f++) {
                     for (int c = 0; c < criteria.size(); c++) {
-                        criterionValuesCFS[c][f][s] = criteria.get(c).apply(fOut);
+                        validSample = validSample && (criterionValuesCFS[c][f][s] != -1);
                     }
-                }*/
+                }
+
+                // If one of the criteria is invalid (value of -1), replace the sample until one works
+                while (!validSample) {
+                    // Replace with subsequent sample at end of current sample range
+                    if (firstSample >= sampleSize) {
+                        throw new InsufficientSampleSizeException();
+                    } else {
+                        currentSamples.set(s, samples.get(firstSample));
+                        firstSample++;
+                        for (int f = 0; f < functionClass.size(); f++) {
+                            for (int c = 0; c < criteria.size(); c++) {
+                                criterionValuesCFS[c][f][s] = criteria.get(c).apply(
+                                        functionClass.get(f).apply(
+                                                currentSamples.get(s)));
+                            }
+                        }
+                        validSample = true;
+                        for (int f = 0; f < functionClass.size(); f++) {
+                            for (int c = 0; c < criteria.size(); c++) {
+                                validSample = validSample && (criterionValuesCFS[c][f][s] != -1);
+                            }
+                        }
+                    }
+                }
             }
 
             for (int c = 0; c < criteria.size(); c++) {
-                // Computes complexity for each criterion
-                double complexityC = complexity.getComplexity(criterionValuesCFS[c]);
+                if (criteria.get(c) instanceof MeanCriterion) {
+                    // Computes complexity for each criterion
+                    double complexityC = complexity.getComplexity(criterionValuesCFS[c]);
 
-                for (int f = 0; f < functionClass.size(); f++) {
+                    for (int f = 0; f < functionClass.size(); f++) {
 
-                    // Estimates the value of each criterion for each function
-                    empiricalMeansFC.get(f)[c] = 0.;
-                    for (double v : criterionValuesCFS[c][f]) {
-                        empiricalMeansFC.get(f)[c] += (v / sampleSize);
+                        // Estimates the value of each criterion for each function
+                        empiricalMeansFC.get(f)[c] = 0.;
+                        for (double v : criterionValuesCFS[c][f]) {
+                            empiricalMeansFC.get(f)[c] += (v / sampleSize);
+                        }
+
+                        // Bounds those estimates
+                        ConfidenceInterval newInterval = complexity.getConfidenceInterval(
+                                empiricalMeansFC.get(f)[c],
+                                complexityC,
+                                delta / maxIterations,
+                                currentSamples.size(),
+                                criteria.size());
+                        if (confidenceIntervalsFC.get(f)[c] == null) {
+                            confidenceIntervalsFC.get(f)[c] = newInterval;
+                        } else {
+                            confidenceIntervalsFC.get(f)[c] = new ConfidenceInterval(
+                                    newInterval.getDelta(),
+                                    Math.min(confidenceIntervalsFC.get(f)[c].getUpperBound(), newInterval.getUpperBound()),
+                                    Math.max(confidenceIntervalsFC.get(f)[c].getLowerBound(), newInterval.getLowerBound()));
+                        }
+                        if (confidenceIntervalsFC.get(f)[c].getLowerBound() >
+                                confidenceIntervalsFC.get(f)[c].getUpperBound()) {
+                            throw new EmptyConfidenceIntervalException();
+                        }
+
+                    }
+                } else if (criteria.get(c) instanceof VarianceCriterion) {
+                    // We require that base criterion and squared criterion have already been computed
+                    Integer baseCriterionIndex = null;
+                    Integer squaredCriterionIndex = null;
+                    for (int c2 = 0; c2 < c; c2++) {
+                        if (Criterion.isMatch(
+                                ((VarianceCriterion) criteria.get(c)).getBaseCriterion(),
+                                criteria.get(c2))) {
+                            baseCriterionIndex = c2;
+                        } else if (Criterion.isMatch(
+                                ((VarianceCriterion) criteria.get(c)).getSquaredCriterion(),
+                                criteria.get(c2))) {
+                            squaredCriterionIndex = c2;
+                        }
                     }
 
-                    // Bounds those estimates
-                    ConfidenceInterval newInterval = complexity.getConfidenceInterval(
-                            empiricalMeansFC.get(f)[c],
-                            complexityC,
-                            delta / maxIterations,
-                            currentSamples.size(),
-                            criteria.size());
-                    if (confidenceIntervalsFC.get(f)[c] == null) {
-                        confidenceIntervalsFC.get(f)[c] = newInterval;
-                    } else {
+                    for (int f = 0; f < functionClass.size(); f++) {
+                        double baseCriterionMean = empiricalMeansFC.get(f)[baseCriterionIndex];
+                        ConfidenceInterval baseCriterionInterval = confidenceIntervalsFC.get(f)[baseCriterionIndex];
+                        double squaredCriterionMean = empiricalMeansFC.get(f)[squaredCriterionIndex];
+                        ConfidenceInterval squaredCriterionInterval = confidenceIntervalsFC.get(f)[squaredCriterionIndex];
+
+                        empiricalMeansFC.get(f)[c] = squaredCriterionMean - Math.pow(baseCriterionMean, 2);
                         confidenceIntervalsFC.get(f)[c] = new ConfidenceInterval(
-                                newInterval.getDelta(),
-                                Math.min(confidenceIntervalsFC.get(f)[c].getUpperBound(), newInterval.getUpperBound()),
-                                Math.max(confidenceIntervalsFC.get(f)[c].getLowerBound(), newInterval.getLowerBound()));
-                    }
-                    if (confidenceIntervalsFC.get(f)[c].getLowerBound() >
-                            confidenceIntervalsFC.get(f)[c].getUpperBound()) {
-                        throw new EmptyConfidenceIntervalException();
+                                delta,
+                                Math.min(1, squaredCriterionInterval.getUpperBound() -
+                                        Math.pow(baseCriterionInterval.getLowerBound(), 2)),
+                                Math.max(0, squaredCriterionInterval.getLowerBound() -
+                                        Math.pow(baseCriterionInterval.getUpperBound(), 2)));
                     }
 
+                } else {
+                    throw new IncorrectlyClassifiedCriterionException();
                 }
             }
 
@@ -374,7 +436,6 @@ public class ProgressiveSampling {
             functionClass = prunedFunctionClass;
             empiricalMeansFC = prunedEmpiricalMeansFC;
             confidenceIntervalsFC = prunedConfidenceIntervalsFC;
-            firstSample += sampleSize;
             sampleSize *= 2;
 
         }
@@ -397,7 +458,7 @@ public class ProgressiveSampling {
             Constraint constraint,
             double epsilon,
             double delta)
-            throws InsufficientSampleSizeException, NoSatisfactoryFunctionsException, EmptyConfidenceIntervalException {
+            throws InsufficientSampleSizeException, NoSatisfactoryFunctionsException, EmptyConfidenceIntervalException, IncorrectlyClassifiedCriterionException {
 
         // counts the number of samples
         int numSamples = 0;
@@ -448,9 +509,13 @@ public class ProgressiveSampling {
 
                 for (int c = 0; c < criteria.size(); c++) {
                     allCriterionValuesCFS[c][f][s] = Double.valueOf(nextRecord[3 + c]);
-                    if (criteria.get(c) instanceof CompressionRatioCriterion) {
-                        allCriterionValuesCFS[c][f][s] = Math.min(1, allCriterionValuesCFS[c][f][s] * 75. / 32.);
-                    }
+//                    if (criteria.get(c) instanceof CompressionRatioCriterion) {
+//                        allCriterionValuesCFS[c][f][s] = Math.min(1, allCriterionValuesCFS[c][f][s] * 75. / 32.);
+//                    } else if (criteria.get(c) instanceof RawMomentCriterion &&
+//                            ((RawMomentCriterion) criteria.get(c)).getBaseCriterion() instanceof CompressionRatioCriterion) {
+//                        allCriterionValuesCFS[c][f][s] = Math.min(1, allCriterionValuesCFS[c][f][s] *
+//                                Math.pow(75. / 32., ((RawMomentCriterion) criteria.get(c)).getPower()));
+//                    }
                 }
 
             }
@@ -519,35 +584,70 @@ public class ProgressiveSampling {
             }
 
             for (int c = 0; c < criteria.size(); c++) {
-                // Computes complexity for each criterion
-                double complexityC = complexity.getComplexity(criterionValuesCFS[c]);
+                if (criteria.get(c) instanceof MeanCriterion) {
+                    // Computes complexity for each criterion
+                    double complexityC = complexity.getComplexity(criterionValuesCFS[c]);
 
-                for (int f = 0; f < functionClass.size(); f++) {
+                    for (int f = 0; f < functionClass.size(); f++) {
 
-                    // Estimates the value of each criterion for each function
-                    empiricalMeansFC.get(f)[c] = 0.;
+                        // Estimates the value of each criterion for each function
+                        empiricalMeansFC.get(f)[c] = 0.;
 
-                    for (double v : criterionValuesCFS[c][f]) {
-                        empiricalMeansFC.get(f)[c] += (v / sampleSize);
+                        for (double v : criterionValuesCFS[c][f]) {
+                            empiricalMeansFC.get(f)[c] += (v / sampleSize);
+                        }
+
+                        // Bounds those estimates
+                        ConfidenceInterval newInterval = complexity.getConfidenceInterval(
+                                empiricalMeansFC.get(f)[c],
+                                complexityC,
+                                delta / maxIterations,
+                                sampleSize,
+                                criteria.size());
+                        if (confidenceIntervalsFC.get(f)[c] == null) {
+                            confidenceIntervalsFC.get(f)[c] = newInterval;
+                        } else {
+                            confidenceIntervalsFC.get(f)[c] = newInterval;
+                        }
+                        if (confidenceIntervalsFC.get(f)[c].getLowerBound() >
+                                confidenceIntervalsFC.get(f)[c].getUpperBound()) {
+                            throw new EmptyConfidenceIntervalException();
+                        }
+
+                    }
+                } else if (criteria.get(c) instanceof VarianceCriterion) {
+                    // We require that base criterion and squared criterion have already been computed
+                    Integer baseCriterionIndex = null;
+                    Integer squaredCriterionIndex = null;
+                    for (int c2 = 0; c2 < c; c2++) {
+                        if (Criterion.isMatch(
+                                ((VarianceCriterion) criteria.get(c)).getBaseCriterion(),
+                                criteria.get(c2))) {
+                            baseCriterionIndex = c2;
+                        } else if (Criterion.isMatch(
+                                ((VarianceCriterion) criteria.get(c)).getSquaredCriterion(),
+                                criteria.get(c2))) {
+                            squaredCriterionIndex = c2;
+                        }
                     }
 
-                    // Bounds those estimates
-                    ConfidenceInterval newInterval = complexity.getConfidenceInterval(
-                            empiricalMeansFC.get(f)[c],
-                            complexityC,
-                            delta / maxIterations,
-                            sampleSize,
-                            criteria.size());
-                    if (confidenceIntervalsFC.get(f)[c] == null) {
-                        confidenceIntervalsFC.get(f)[c] = newInterval;
-                    } else {
-                        confidenceIntervalsFC.get(f)[c] = newInterval;
-                    }
-                    if (confidenceIntervalsFC.get(f)[c].getLowerBound() >
-                            confidenceIntervalsFC.get(f)[c].getUpperBound()) {
-                        throw new EmptyConfidenceIntervalException();
+                    for (int f = 0; f < functionClass.size(); f++) {
+                        double baseCriterionMean = empiricalMeansFC.get(f)[baseCriterionIndex];
+                        ConfidenceInterval baseCriterionInterval = confidenceIntervalsFC.get(f)[baseCriterionIndex];
+                        double squaredCriterionMean = empiricalMeansFC.get(f)[squaredCriterionIndex];
+                        ConfidenceInterval squaredCriterionInterval = confidenceIntervalsFC.get(f)[squaredCriterionIndex];
+
+                        empiricalMeansFC.get(f)[c] = squaredCriterionMean - Math.pow(baseCriterionMean, 2);
+                        confidenceIntervalsFC.get(f)[c] = new ConfidenceInterval(
+                                delta,
+                                Math.min(1, squaredCriterionInterval.getUpperBound() -
+                                        Math.pow(baseCriterionInterval.getLowerBound(), 2)),
+                                Math.max(0, squaredCriterionInterval.getLowerBound() -
+                                        Math.pow(baseCriterionInterval.getUpperBound(), 2)));
                     }
 
+                } else {
+                    throw new IncorrectlyClassifiedCriterionException();
                 }
             }
 

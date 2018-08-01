@@ -12,14 +12,23 @@ print(input_file)
 
 ps_dataset = pd.read_csv(input_file)
 
+# function_names = ['Lame MP3 Compression V1', 'Lame MP3 Compression V2',
+# 	'Lame MP3 Compression V3', 'Lame MP3 Compression V4',
+# 	'Lame MP3 Compression V5', 'Lame MP3 Compression V6',
+# 	'Lame MP3 Compression V7', 'Lame MP3 Compression V8',
+# 	'Lame MP3 Compression V9']
+
 function_names = ['Lame MP3 Compression V1', 'Lame MP3 Compression V2',
 	'Lame MP3 Compression V3', 'Lame MP3 Compression V4',
 	'Lame MP3 Compression V5', 'Lame MP3 Compression V6',
 	'Lame MP3 Compression V7', 'Lame MP3 Compression V8',
-	'Lame MP3 Compression V9']
+	'Lame MP3 Compression V9', 'Lame MP3 Constant 320',
+	'Lame MP3 Constant 256', 'Lame MP3 Constant 128',
+	'Lame MP3 Constant 64']
 
-criterion_names = ['PEAQ Objective Difference', 'Root Mean Squared Error',
-    'Compression Ratio', 'Compression Time', 'Decompression Time']
+criterion_names = ['PEAQ Objective Difference', 'PEAQ Objective Difference ^ 2',
+    'PEAQ Objective Difference Variance', 'Compression Ratio', 'Compression Ratio ^ 2',
+    'Compression Ratio Variance']
 
 num_iterations = max(ps_dataset.ITERATION) + 1
 num_functions = max(ps_dataset.FUNCTION_INDEX) + 1

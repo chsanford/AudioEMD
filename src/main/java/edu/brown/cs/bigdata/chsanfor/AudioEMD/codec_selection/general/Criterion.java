@@ -1,6 +1,7 @@
 package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Some quantity that we wish to measure about the output of the function applied to a sample
@@ -40,5 +41,12 @@ public abstract class Criterion {
             out[c] = criteria.get(c).apply(fx);
         }
         return out;
+    }
+
+    /**
+     * Returns true if the criteria measure the same thing
+     */
+    public static boolean isMatch(Criterion c1, Criterion c2) {
+        return Objects.equals(c1.toString(), c2.toString());
     }
 }

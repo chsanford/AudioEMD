@@ -1,5 +1,6 @@
 package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.toy;
 
+import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.criteria.IncorrectlyClassifiedCriterionException;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.*;
 
 import java.util.ArrayList;
@@ -56,7 +57,10 @@ public class Main {
                         out.getOptimalCriteriaConfidenceIntervalsC()[c].toString());
             }
 
-        } catch (InsufficientSampleSizeException | NoSatisfactoryFunctionsException | EmptyConfidenceIntervalException e) {
+        } catch (InsufficientSampleSizeException |
+                NoSatisfactoryFunctionsException |
+                EmptyConfidenceIntervalException |
+                IncorrectlyClassifiedCriterionException e) {
             e.printStackTrace();
         }
     }

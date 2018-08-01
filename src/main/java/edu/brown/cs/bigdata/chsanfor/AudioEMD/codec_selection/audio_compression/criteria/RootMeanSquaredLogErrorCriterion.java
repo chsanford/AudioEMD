@@ -10,7 +10,7 @@ import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.FunctionOu
 /**
  * Obtains the root mean squared log error between the original and decompressed files
  */
-public class RootMeanSquaredLogErrorCriterion extends Criterion {
+public class RootMeanSquaredLogErrorCriterion extends MeanCriterion {
     private static String NAME = "ROOT_MEAN_SQUARED_LOG_ERROR";
 
     public static String getName() {

@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * Created by Clayton on 4/5/18.
  */
-public abstract class WavDivergenceCriterion extends Criterion {
+public abstract class WavDivergenceCriterion extends MeanCriterion {
 
     public abstract double computeCriterion(AudioSequence originalSeq, AudioSequence decompressedSeq);
 }

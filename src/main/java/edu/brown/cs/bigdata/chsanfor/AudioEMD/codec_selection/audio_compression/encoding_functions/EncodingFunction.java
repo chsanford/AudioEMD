@@ -63,10 +63,15 @@ public abstract class EncodingFunction extends Function {
                 1.0 * (endDecompressionTime - endCompressionTime) / (10e9));*/
 
         for (Criterion c : criteria) {
+            if (c instanceof RawMomentCriterion) {
+                c = ((RawMomentCriterion) c).getBaseCriterion();
+            }
             if (c instanceof WavDivergenceCriterion) {
                 criteriaMap2.put(c, ((WavDivergenceCriterion) c).computeCriterion(audioSample, decompressed));
             }  else if (c instanceof CompressionRatioCriterion) {
-                criteriaMap2.put(c, 1.0 * tempCompressed.length() / audioSample.getAudioFile().length());
+                //criteriaMap2.put(c, 1.0 * tempCompressed.length() / audioSample.getAudioFile().length());
+                criteriaMap2.put(c,  Math.min(1,
+                        tempCompressed.length() / audioSample.getAudioFile().length() * 75. / 32.));
             } else if (c instanceof EncodingTimeCriterion) {
                 criteriaMap2.put(c, (endCompressionTime - startCompressionTime) / (10e9));
             } else if (c instanceof DecodingTimeCriterion) {

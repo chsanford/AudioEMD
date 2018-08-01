@@ -25,12 +25,21 @@ public class Main {
         double epsilon = 0.1;
         double delta = 0.05;
 
-        List<Criterion> criteria = Arrays.asList(
+        /*List<Criterion> criteria = Arrays.asList(
                 new PEAQObjectiveDifferenceCriterion(),
                 new RootMeanSquaredErrorCriterion(),
                 new CompressionRatioCriterion(),
                 new EncodingTimeCriterion(),
                 new DecodingTimeCriterion()
+        );*/
+
+        List<Criterion> criteria = Arrays.asList(
+                new PEAQObjectiveDifferenceCriterion(),
+                new RawMomentCriterion(new PEAQObjectiveDifferenceCriterion(), 2),
+                new VarianceCriterion(new PEAQObjectiveDifferenceCriterion()),
+                new CompressionRatioCriterion(),
+                new RawMomentCriterion(new CompressionRatioCriterion(), 2),
+                new VarianceCriterion(new CompressionRatioCriterion())
         );
 
         List<Function> functionClass = Arrays.asList(
@@ -50,10 +59,16 @@ public class Main {
                 //(Function) new Codec2EncodingFunction(1200, criteria),
                 //(Function) new Codec2EncodingFunction(3200, criteria));
 
-        Objective objective = new Objective(new double[]{0, 0, 1, 0, 0});
+        //Objective objective = new Objective(new double[]{0, 0, 1, 0, 0});
 
-        Constraint constraint = new Constraint(
+        /*Constraint constraint = new Constraint(
                 new double[][]{{0, 0, 0, 1, 0}, {0, 0, 0, 0, 1}},
+                new double[]{0.5, 0.5}
+        );*/
+
+        Objective objective = new Objective(new double[]{1, 0, 0, 1, 0, 0});
+        Constraint constraint = new Constraint(
+                new double[][]{{0, 0, 1, 0, 0, 0}, {0, 0, 0, 0, 0, 1}},
                 new double[]{0.5, 0.5}
         );
 
@@ -75,7 +90,8 @@ public class Main {
                         delta);
             } catch (InsufficientSampleSizeException |
                     NoSatisfactoryFunctionsException |
-                    EmptyConfidenceIntervalException e) {
+                    EmptyConfidenceIntervalException |
+                    IncorrectlyClassifiedCriterionException e) {
                 e.printStackTrace();
             }
         } else if (Objects.equals(option, "fill-csv")) {
@@ -103,7 +119,8 @@ public class Main {
                         delta);
             } catch (InsufficientSampleSizeException |
                     NoSatisfactoryFunctionsException |
-                    EmptyConfidenceIntervalException e) {
+                    EmptyConfidenceIntervalException |
+                    IncorrectlyClassifiedCriterionException e) {
                 e.printStackTrace();
             }
         } else if (Objects.equals(option, "merge-csv-samples")) {

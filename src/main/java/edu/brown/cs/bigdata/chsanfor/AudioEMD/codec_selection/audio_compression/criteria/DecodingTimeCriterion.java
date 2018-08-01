@@ -7,7 +7,7 @@ import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.FunctionOu
 /**
  * Obtains the amount of time needed to decompress an audio file
  */
-public class DecodingTimeCriterion extends Criterion{
+public class DecodingTimeCriterion extends MeanCriterion{
     private static String NAME = "DECOMPRESSION_TIME";
 
     public static String getName() {

@@ -7,7 +7,7 @@ import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.FunctionOu
 /**
  * Obtains the ratio of the size of the compressed file to that of the uncompressed file
  */
-public class CompressionRatioCriterion extends Criterion {
+public class CompressionRatioCriterion extends MeanCriterion {
 
     public static String NAME = "COMPRESSION_RATIO";
 
