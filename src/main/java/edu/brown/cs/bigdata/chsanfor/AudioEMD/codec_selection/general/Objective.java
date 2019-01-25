@@ -104,11 +104,11 @@ public class Objective {
         // For each criterion, chooses the lower bound or upper bound depending on which point will have a lower
         //      value for this given criterion -- because of the linearity of the objective, that vertex must have the
         //      minimum value
-        for (int j = 0; j < numCriteria; j++) {
-            if (weights.getEntry(j) > 0) {
-                leastObjectiveVertex[j] = confidenceIntervalsC[j].getLowerBound();
+        for (int c = 0; c < numCriteria; c++) {
+            if (weights.getEntry(c) > 0) {
+                leastObjectiveVertex[c] = confidenceIntervalsC[c].getLowerBound();
             } else {
-                leastObjectiveVertex[j] = confidenceIntervalsC[j].getUpperBound();
+                leastObjectiveVertex[c] = confidenceIntervalsC[c].getUpperBound();
             }
         }
         return compute(leastObjectiveVertex);

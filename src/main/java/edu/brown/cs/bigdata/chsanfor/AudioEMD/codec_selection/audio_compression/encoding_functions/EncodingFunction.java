@@ -38,6 +38,7 @@ public abstract class EncodingFunction extends Function {
         File tempDecompressed = new File("data/temp/temp_decompressed_" + filename + "_" + thread_id + ".wav");
 
 
+
         long startCompressionTime = System.nanoTime();
         compress(audioSample, tempCompressed);
         long endCompressionTime = System.nanoTime();
@@ -46,21 +47,7 @@ public abstract class EncodingFunction extends Function {
 
         AudioSequence decompressed = new AudioSequence(tempDecompressed);
 
-        //TODO add this check
-        //assert(audioSample.getSequenceLength() == decompressed.getSequenceLength());
-
         Map<Criterion, Double> criteriaMap2 = new HashMap<>();
-
-        /*Map<String, Double> criteriaMap = new HashMap<>();
-
-        criteriaMap.put(RootMeanSquaredErrorCriterion.getName(),
-                Math.sqrt(decompressed.error(audioSample) / (audioSample.getSequenceLength())));
-        criteriaMap.put(CompressionRatioCriterion.getName(),
-                1.0 * tempCompressed.length() / audioSample.getAudioFile().length());
-        criteriaMap.put(EncodingTimeCriterion.getName(),
-                1.0 * (endCompressionTime - startCompressionTime) / (10e9));
-        criteriaMap.put(DecodingTimeCriterion.getName(),
-                1.0 * (endDecompressionTime - endCompressionTime) / (10e9));*/
 
         for (Criterion c : criteria) {
             if (c instanceof RawMomentCriterion) {
@@ -71,7 +58,7 @@ public abstract class EncodingFunction extends Function {
             }  else if (c instanceof CompressionRatioCriterion) {
                 //criteriaMap2.put(c, 1.0 * tempCompressed.length() / audioSample.getAudioFile().length());
                 criteriaMap2.put(c,  Math.min(1,
-                        tempCompressed.length() / audioSample.getAudioFile().length() * 75. / 32.));
+                        1.0 * tempCompressed.length() / audioSample.getAudioFile().length() * 75. / 32.));
             } else if (c instanceof EncodingTimeCriterion) {
                 criteriaMap2.put(c, (endCompressionTime - startCompressionTime) / (10e9));
             } else if (c instanceof DecodingTimeCriterion) {
@@ -79,10 +66,9 @@ public abstract class EncodingFunction extends Function {
             }
         }
 
-
-
         tempCompressed.delete();
         tempDecompressed.delete();
+
 
         //return new EncodingFunctionOutput(criteriaMap);
         return new EncodingFunctionOutput(criteriaMap2);

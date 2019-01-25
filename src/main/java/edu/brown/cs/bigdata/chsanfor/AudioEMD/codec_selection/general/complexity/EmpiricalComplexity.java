@@ -1,4 +1,9 @@
-package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general;
+package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.complexity;
+
+import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.ConfidenceInterval;
+import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.Criterion;
+import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.Function;
+import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.Sample;
 
 import java.util.List;
 
@@ -24,6 +29,15 @@ public interface EmpiricalComplexity {
     double getComplexity(Double[][] criterionValuesFS);
 
     /**
+     * Computes the sample complexity for a criterion applied to a function class, where only the first samplesToUse
+     * samples are used
+     * @param criterionValuesFS gives the value of a criterion evaluated for each certain function on each sample
+     * @param samplesToUse gives number of samples in criterionValuesFS to use in complexity calculation
+     * @return a measure of complexity, which can be used to make bounds
+     */
+    double getComplexity(Double[][] criterionValuesFS, int samplesToUse);
+
+    /**
      * Obtains a confidence interval based on the complexity obtained
      * @param empiricalMean the empirically-estimated mean for the criterion applied to the function class
      * @param complexity the complexity value for the corresponding criterion and function class
@@ -37,5 +51,6 @@ public interface EmpiricalComplexity {
             double complexity,
             double delta,
             double numSamples,
-            double numCriteria);
+            double numCriteria,
+            double numFunctions);
 }

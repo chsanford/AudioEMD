@@ -2,6 +2,7 @@ package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.toy;
 
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.criteria.IncorrectlyClassifiedCriterionException;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.*;
+import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.complexity.OneShotRademacherComplexity;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,7 +35,7 @@ public class Main {
                 new double[]{0.5, 0.5}
         );
 
-        BruteForce bf = new BruteForce(new OneShotRademacherComplexity());
+        GlobalSampling bf = new GlobalSampling(new OneShotRademacherComplexity());
         ProgressiveSampling ps = new ProgressiveSampling(new OneShotRademacherComplexity());
 
 
