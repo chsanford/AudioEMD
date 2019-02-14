@@ -48,7 +48,8 @@ public class Main {
                     objective,
                     constraint,
                     0.05,
-                    0.05);
+                    0.05,
+                    false);
 
             System.out.println("Best algorithm: " + out.getOptimalFunction().toString());
             System.out.println("Objective upper bound: " + out.getLowerBound());

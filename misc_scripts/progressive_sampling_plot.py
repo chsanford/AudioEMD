@@ -1,38 +1,28 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+
 import numpy as np
 import sys
+import matplotlib.cm as cm
 
 assert len(sys.argv) > 0
 
-#FILE NAME GOES HERE
-#input_file = "../data/no_nan_criteria/ps_out1.csv"
 input_file = sys.argv[1]
-print(input_file)
+output_file = sys.argv[2]
 
 ps_dataset = pd.read_csv(input_file)
 
-# function_names = ['Lame MP3 Compression V1', 'Lame MP3 Compression V2',
-# 	'Lame MP3 Compression V3', 'Lame MP3 Compression V4',
-# 	'Lame MP3 Compression V5', 'Lame MP3 Compression V6',
-# 	'Lame MP3 Compression V7', 'Lame MP3 Compression V8',
-# 	'Lame MP3 Compression V9']
-
-function_names = ['Lame MP3 Compression V1', 'Lame MP3 Compression V2',
-	'Lame MP3 Compression V3', 'Lame MP3 Compression V4',
-	'Lame MP3 Compression V5', 'Lame MP3 Compression V6',
-	'Lame MP3 Compression V7', 'Lame MP3 Compression V8',
-	'Lame MP3 Compression V9', 'Lame MP3 Constant 320',
-	'Lame MP3 Constant 256', 'Lame MP3 Constant 128',
-	'Lame MP3 Constant 64']
+function_names = sorted(list(set(ps_dataset.FUNCTION_INDEX)))
 
 criterion_names = ['PEAQ Objective Difference', 'PEAQ Objective Difference ^ 2',
     'PEAQ Objective Difference Variance', 'Compression Ratio', 'Compression Ratio ^ 2',
     'Compression Ratio Variance']
 
 num_iterations = max(ps_dataset.ITERATION) + 1
-num_functions = max(ps_dataset.FUNCTION_INDEX) + 1
+num_functions = len(function_names)
 num_criteria = max(ps_dataset.CRITERION_INDEX) + 1
+
+colors = cm.rainbow(np.linspace(0, 1, num_functions))
 
 num_samples_I = np.full(num_iterations, np.nan)
 obj_mean_IF = np.full((num_iterations, num_functions), np.nan)
@@ -44,7 +34,7 @@ crit_max_IFC = np.full((num_iterations, num_functions, num_criteria), np.nan)
 
 for _, row in ps_dataset.iterrows():
 	i = int(row['ITERATION'])
-	f = int(row['FUNCTION_INDEX'])
+	f = function_names.index(row['FUNCTION_INDEX'])
 	c = int(row['CRITERION_INDEX'])
 	num_samples_I[i] = row['NUMBER_SAMPLES']
 	obj_mean_IF[i, f] = row['OBJECTIVE_MEAN']
@@ -94,28 +84,41 @@ for f in range(num_functions):
 		obj_mean_IF[:, f],
 		np.asarray([
 			obj_mean_IF[:, f] - obj_min_IF[:, f],
-			obj_max_IF[:, f] - obj_mean_IF[:, f]]))
+			obj_max_IF[:, f] - obj_mean_IF[:, f]]),
+		color=colors[f])
+	# plt.plot(
+	# 	num_samples_I,
+	# 	obj_mean_IF[:, f],
+	# 	color=colors[f],
+	# 	marker='o')
+	# plt.fill_between(
+	# 	num_samples_I,
+	# 	obj_min_IF[:, f],
+	# 	obj_max_IF[:, f],
+	# 	color=colors[f],
+	# 	alpha=0.2)
 ax.semilogx()
 plt.xlabel("Sample Size")
 plt.ylabel("Objective Value")
 plt.title("Mean Objectives and Confidence Intervals for Increasing Sample Size")
-plt.legend(function_names)
+lgd = plt.legend(function_names, loc='upper center', bbox_to_anchor=(1.45, 0.8))
+fig.savefig(output_file, bbox_extra_artists=(lgd,), bbox_inches='tight')
 plt.show()
 
-for c in range(num_criteria):
-	fig, ax = plt.subplots()
-	for f in range(num_functions):
-		plt.errorbar(
-			num_samples_I * (1 + 0.012 * f),
-			crit_mean_IFC[:, f, c],
-			np.asarray([
-				crit_mean_IFC[:, f, c] - crit_min_IFC[:, f, c],
-				crit_max_IFC[:, f, c] - crit_mean_IFC[:, f, c]]))
-	ax.semilogx()
-	plt.xlabel("Sample Size")
-	plt.ylabel("Criteria Value")
-	plt.title("Mean Criteria " + criterion_names[c] + 
-		" and Confidence Intervals for Increasing Sample Size")
-	plt.legend(function_names)
-	plt.show()
+# for c in range(num_criteria):
+# 	fig, ax = plt.subplots()
+# 	for f in range(num_functions):
+# 		plt.errorbar(
+# 			num_samples_I * (1 + 0.012 * f),
+# 			crit_mean_IFC[:, f, c],
+# 			np.asarray([
+# 				crit_mean_IFC[:, f, c] - crit_min_IFC[:, f, c],
+# 				crit_max_IFC[:, f, c] - crit_mean_IFC[:, f, c]]))
+# 	ax.semilogx()
+# 	plt.xlabel("Sample Size")
+# 	plt.ylabel("Criteria Value")
+# 	plt.title("Mean Criteria " + criterion_names[c] + 
+# 		" and Confidence Intervals for Increasing Sample Size")
+# 	plt.legend(function_names)
+# 	plt.show()
 

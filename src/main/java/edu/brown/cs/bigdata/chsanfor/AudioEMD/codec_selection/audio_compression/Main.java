@@ -17,6 +17,7 @@ import java.util.Objects;
  * Created by Clayton on 2/27/18.
  */
 public class Main {
+
     public static void main(String[] args) {
 
         String option = args[1];
@@ -27,15 +28,14 @@ public class Main {
         double epsilon = 0.01;
         double delta = 0.05;
 
-        List<Criterion> criteria = Arrays.asList(
+        List<Criterion> criteria = new ArrayList<>(Arrays.asList(
                 new PEAQObjectiveDifferenceCriterion(),
                 new CompressionRatioCriterion(),
                 new RootMeanSquaredErrorCriterion(),
                 new EncodingTimeCriterion(),
-                new DecodingTimeCriterion()
-        );
+                new DecodingTimeCriterion()));
 
-        List<Function> functionClass = Arrays.asList(
+        List<Function> functionClass = new ArrayList<>(Arrays.asList(
                 (Function) new LameMP3EncodingFunction(1, criteria),
                 (Function) new LameMP3EncodingFunction(2, criteria),
                 (Function) new LameMP3EncodingFunction(3, criteria),
@@ -48,7 +48,7 @@ public class Main {
                 (Function) new LameConstantMP3EncodingFunction(320, criteria),
                 (Function) new LameConstantMP3EncodingFunction(256, criteria),
                 (Function) new LameConstantMP3EncodingFunction(128, criteria),
-                (Function) new LameConstantMP3EncodingFunction(64, criteria));
+                (Function) new LameConstantMP3EncodingFunction(64, criteria)));
 
         Objective objective = new Objective(new double[]{1, 1, 0, 0, 0});
 
@@ -72,7 +72,8 @@ public class Main {
                         objective,
                         constraint,
                         epsilon,
-                        delta);
+                        delta,
+                        false);
             } catch (InsufficientSampleSizeException |
                     NoSatisfactoryFunctionsException |
                     EmptyConfidenceIntervalException |
@@ -108,7 +109,7 @@ public class Main {
 
             switch (functionOption) {
                 case "ALL":
-                    functionClass = Arrays.asList(
+                    functionClass = new ArrayList<>(Arrays.asList(
                             (Function) new LameMP3EncodingFunction(1, criteria),
                             (Function) new LameMP3EncodingFunction(2, criteria),
                             (Function) new LameMP3EncodingFunction(3, criteria),
@@ -121,10 +122,10 @@ public class Main {
                             (Function) new LameConstantMP3EncodingFunction(320, criteria),
                             (Function) new LameConstantMP3EncodingFunction(256, criteria),
                             (Function) new LameConstantMP3EncodingFunction(128, criteria),
-                            (Function) new LameConstantMP3EncodingFunction(64, criteria));
+                            (Function) new LameConstantMP3EncodingFunction(64, criteria)));
                     break;
                 case "VBR":
-                    functionClass = Arrays.asList(
+                    functionClass = new ArrayList<>(Arrays.asList(
                             (Function) new LameMP3EncodingFunction(1, criteria),
                             (Function) new LameMP3EncodingFunction(2, criteria),
                             (Function) new LameMP3EncodingFunction(3, criteria),
@@ -133,10 +134,10 @@ public class Main {
                             (Function) new LameMP3EncodingFunction(6, criteria),
                             (Function) new LameMP3EncodingFunction(7, criteria),
                             (Function) new LameMP3EncodingFunction(8, criteria),
-                            (Function) new LameMP3EncodingFunction(9, criteria));
+                            (Function) new LameMP3EncodingFunction(9, criteria)));
                     break;
                 case "ODD-VBR-CBR":
-                    functionClass = Arrays.asList(
+                    functionClass = new ArrayList<>(Arrays.asList(
                             (Function) new LameMP3EncodingFunction(1, criteria),
                             (Function) new LameMP3EncodingFunction(3, criteria),
                             (Function) new LameMP3EncodingFunction(5, criteria),
@@ -145,21 +146,21 @@ public class Main {
                             (Function) new LameConstantMP3EncodingFunction(320, criteria),
                             (Function) new LameConstantMP3EncodingFunction(256, criteria),
                             (Function) new LameConstantMP3EncodingFunction(128, criteria),
-                            (Function) new LameConstantMP3EncodingFunction(64, criteria));
+                            (Function) new LameConstantMP3EncodingFunction(64, criteria)));
                     break;
                 case "ODD-VBR":
-                    functionClass = Arrays.asList(
+                    functionClass = new ArrayList<>(Arrays.asList(
                             (Function) new LameMP3EncodingFunction(1, criteria),
                             (Function) new LameMP3EncodingFunction(3, criteria),
                             (Function) new LameMP3EncodingFunction(5, criteria),
                             (Function) new LameMP3EncodingFunction(7, criteria),
-                            (Function) new LameMP3EncodingFunction(9, criteria));
+                            (Function) new LameMP3EncodingFunction(9, criteria)));
                     break;
             }
 
             switch (criteriaOption) {
                 case "ALL-VAR":
-                    criteria = Arrays.asList(
+                    criteria = new ArrayList<>(Arrays.asList(
                             new PEAQObjectiveDifferenceCriterion(),
                             new RawMomentCriterion(new PEAQObjectiveDifferenceCriterion(), 2),
                             new VarianceCriterion(new PEAQObjectiveDifferenceCriterion()),
@@ -170,7 +171,7 @@ public class Main {
                             new RawMomentCriterion(new RootMeanSquaredErrorCriterion(), 2),
                             new VarianceCriterion(new RootMeanSquaredErrorCriterion()),
                             new EncodingTimeCriterion(),
-                            new DecodingTimeCriterion());
+                            new DecodingTimeCriterion()));
                     switch (objectiveOption) {
                         case "PEAQ":
                             objective = new Objective(new double[]{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
@@ -217,13 +218,13 @@ public class Main {
                     }
                     break;
                 case "PEAQ-CR-VAR":
-                    criteria = Arrays.asList(
+                    criteria = new ArrayList<>(Arrays.asList(
                             new PEAQObjectiveDifferenceCriterion(),
                             new RawMomentCriterion(new PEAQObjectiveDifferenceCriterion(), 2),
                             new VarianceCriterion(new PEAQObjectiveDifferenceCriterion()),
                             new CompressionRatioCriterion(),
                             new RawMomentCriterion(new CompressionRatioCriterion(), 2),
-                            new VarianceCriterion(new CompressionRatioCriterion()));
+                            new VarianceCriterion(new CompressionRatioCriterion())));
                     switch (objectiveOption) {
                         case "PEAQ":
                             objective = new Objective(new double[]{1, 0, 0, 0, 0, 0});
@@ -262,12 +263,12 @@ public class Main {
                     }
                     break;
                 case "ALL":
-                    criteria = Arrays.asList(
+                    criteria = new ArrayList<>(Arrays.asList(
                             new PEAQObjectiveDifferenceCriterion(),
                             new CompressionRatioCriterion(),
                             new RootMeanSquaredErrorCriterion(),
                             new EncodingTimeCriterion(),
-                            new DecodingTimeCriterion());
+                            new DecodingTimeCriterion()));
                     switch (objectiveOption) {
                         case "PEAQ":
                             objective = new Objective(new double[]{1, 0, 0, 0, 0});
@@ -299,9 +300,9 @@ public class Main {
                     }
                     break;
                 case "PEAQ-CR":
-                    criteria = Arrays.asList(
+                    criteria = new ArrayList<>(Arrays.asList(
                             new PEAQObjectiveDifferenceCriterion(),
-                            new CompressionRatioCriterion());
+                            new CompressionRatioCriterion()));
                     switch (objectiveOption) {
                         case "PEAQ":
                             objective = new Objective(new double[]{1, 0});
@@ -384,18 +385,6 @@ public class Main {
                                 isApproximation,
                                 cohortSize);
                     }
-//                    else {
-//                        GlobalSampling gsAlg = new GlobalSampling(complexityMeasure);
-//                        gsAlg.runAlgorithm(
-//                                new File(sampleCSV),
-//                                new File(outCSV),
-//                                functionClass,
-//                                criteria,
-//                                objective,
-//                                constraint,
-//                                delta,
-//                                isApproximation);
-//                    }
                 }
 
             } catch (InsufficientSampleSizeException |

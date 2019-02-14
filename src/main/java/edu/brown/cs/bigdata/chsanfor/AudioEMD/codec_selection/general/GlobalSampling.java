@@ -2,6 +2,7 @@ package edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general;
 
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
+import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.audio_compression.criteria.IncorrectlyClassifiedCriterionException;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.complexity.EMDComplexity;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.complexity.EmpiricalComplexity;
 import edu.brown.cs.bigdata.chsanfor.AudioEMD.codec_selection.general.complexity.OneShotRademacherComplexity;
@@ -50,78 +51,53 @@ public class GlobalSampling {
             List<Criterion> criteria,
             Objective objective,
             Constraint constraint,
-            double delta) throws InsufficientSampleSizeException {
+            double delta,
+            boolean isApproximation
+    ) throws InsufficientSampleSizeException, EmptyConfidenceIntervalException, IncorrectlyClassifiedCriterionException {
 
-        Double[][][] criterionValuesCFS = new Double[criteria.size()][functionClass.size()][samples.size()];
+        Double[][][] criterionValuesCFS = sampleCriterionComputations(
+                samples,
+                functionClass,
+                criteria);
+
+        List<Double[]> empiricalMeansFC = new ArrayList<>();
+        List<ConfidenceInterval[]> confidenceIntervalsFC = new ArrayList<>();
 
         for (int f = 0; f < functionClass.size(); f++) {
-            for (int s = 0; s < samples.size(); s++) {
-                FunctionOutput fOut = functionClass.get(f).apply(samples.get(s));
-                for (int c = 0; c < criteria.size(); c++) {
-                    criterionValuesCFS[c][f][s] = criteria.get(c).apply(fOut);
-                }
-            }
+            empiricalMeansFC.add(new Double[criteria.size()]);
+            confidenceIntervalsFC.add(new ConfidenceInterval[criteria.size()]);
         }
 
-        Double[][] empiricalMeansFC = new Double[functionClass.size()][criteria.size()];
-        ConfidenceInterval[][] confidenceIntervalsFC = new ConfidenceInterval[functionClass.size()][criteria.size()];
+        ProgressiveSampling.computeMeansAndConfidenceIntervals(
+                criterionValuesCFS,
+                empiricalMeansFC,
+                confidenceIntervalsFC,
+                criteria,
+                functionClass.size(),
+                samples.size(),
+                1,
+                delta,
+                isApproximation,
+                complexity);
 
-        for (int c = 0; c < criteria.size(); c++) {
-            // Computes complexity for each criterion
-            double complexityC = complexity.getComplexity(criterionValuesCFS[c]);
+        Integer optimalFIndex = ProgressiveSampling.getOptimalFunctionIndex(
+                functionClass,
+                confidenceIntervalsFC,
+                objective,
+                constraint);
 
-            for (int f = 0; f < functionClass.size(); f++) {
+        Double minLowerBound = ProgressiveSampling.getMinLowerBound(
+                functionClass,
+                confidenceIntervalsFC,
+                objective,
+                constraint);
 
-                // Estimates the value of each criterion for each function
-                empiricalMeansFC[f][c] = 0.;
-                for (double v : criterionValuesCFS[c][f]) {
-                    empiricalMeansFC[f][c] += (v / samples.size());
-                }
-                System.out.println(empiricalMeansFC[f][c]);
-
-                // Bounds those estimates
-                confidenceIntervalsFC[f][c] = complexity.getConfidenceInterval(
-                        empiricalMeansFC[f][c],
-                        complexityC,
-                        delta,
-                        samples.size(),
-                        criteria.size(),
-                        functionClass.size());
-
-            }
-        }
-
-        Integer optimalFIndex = null;
-        Double optimalLowerBoundF = null;
-        Double maxUpperBound = null;
-        for (int f = 0; f < functionClass.size(); f++) {
-            // For functions that we are confident are valid, we find the one with the greatest lower-bound objective
-            if (constraint.isAlwaysValidRectangle(confidenceIntervalsFC[f])) {
-                double lowerBound = objective.minRectangle(confidenceIntervalsFC[f]);
-                if (optimalFIndex == null || lowerBound < optimalLowerBoundF) {
-                    optimalLowerBoundF = lowerBound;
-                    optimalFIndex = f;
-                }
-            }
-            // For functions that may be valid, then we find an upper bound on the objective function
-            if (!constraint.isNeverValidRectangle(confidenceIntervalsFC[f])) {
-                double upperBound = objective.maxRectangle(confidenceIntervalsFC[f]);
-                if (maxUpperBound == null || upperBound > maxUpperBound) {
-                    maxUpperBound = upperBound;
-                }
-            }
-        }
-
-        // If no valid function is found, throw exception
-        if (optimalFIndex == null) {
-            throw new InsufficientSampleSizeException();
-        }
 
         return new AlgorithmSelectionOutput(
                 functionClass.get(optimalFIndex),
-                empiricalMeansFC[optimalFIndex],
-                confidenceIntervalsFC[optimalFIndex],
-                maxUpperBound);
+                empiricalMeansFC.get(optimalFIndex),
+                confidenceIntervalsFC.get(optimalFIndex),
+                minLowerBound);
     }
 
     public AlgorithmSelectionOutput runAlgorithm(
@@ -132,334 +108,23 @@ public class GlobalSampling {
             Objective objective,
             Constraint constraint,
             double delta,
-            boolean isApproximation) throws InsufficientSampleSizeException {
+            boolean isApproximation) throws InsufficientSampleSizeException, EmptyConfidenceIntervalException, IncorrectlyClassifiedCriterionException {
 
+        Double[][][] criterionValuesCFS = sampleCriterionComputations(
+                samples,
+                functionClass,
+                criteria);
 
-        Writer writer = null;
-        try {
-            writer = Files.newBufferedWriter(outputCSV.toPath());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        CSVWriter csvWriter = new CSVWriter(writer,
-                CSVWriter.DEFAULT_SEPARATOR,
-                CSVWriter.NO_QUOTE_CHARACTER,
-                CSVWriter.DEFAULT_ESCAPE_CHARACTER,
-                CSVWriter.DEFAULT_LINE_END);
-
-        List<String> headerRecord = new ArrayList<>();
-        headerRecord.add("ITERATION");
-        headerRecord.add("NUMBER_SAMPLES");
-        headerRecord.add("FUNCTION_INDEX");
-        headerRecord.add("OBJECTIVE_MEAN");
-        headerRecord.add("OBJECTIVE_MIN");
-        headerRecord.add("OBJECTIVE_MAX");
-        headerRecord.add("CRITERION_INDEX");
-        headerRecord.add("CRITERION_MEAN");
-        headerRecord.add("CRITERION_MIN");
-        headerRecord.add("CRITERION_MAX");
-        csvWriter.writeNext(headerRecord.toArray(new String[headerRecord.size()]));
-
-        Double[][][] criterionValuesCFS = new Double[criteria.size()][functionClass.size()][samples.size()];
-
-        for (int f = 0; f < functionClass.size(); f++) {
-            for (int s = 0; s < samples.size(); s++) {
-                FunctionOutput fOut = functionClass.get(f).apply(samples.get(s));
-                for (int c = 0; c < criteria.size(); c++) {
-                    criterionValuesCFS[c][f][s] = criteria.get(c).apply(fOut);
-                }
-            }
-        }
-
-        double[][][] empiricalMeansFSC = new double[functionClass.size()][samples.size()][criteria.size()];
-        ConfidenceInterval[][][] confidenceIntervalsFSC =
-                new ConfidenceInterval[functionClass.size()][samples.size()][criteria.size()];
-
-        double[][] empiricalMeansFC = new double[functionClass.size()][criteria.size()];
-        ConfidenceInterval[][] confidenceIntervalsFC = new ConfidenceInterval[functionClass.size()][criteria.size()];
-
-        for (int c = 0; c < criteria.size(); c++) {
-            for (int f = 0; f < functionClass.size(); f++) {
-
-                // Estimates the value of each criterion for each function
-               // empiricalMeansFC[f][c] = 0.;
-
-                for (int s = 0; s < samples.size(); s++) {
-                    if (s == 0) {
-                        empiricalMeansFSC[f][s][c] = criterionValuesCFS[c][f][s];
-                    } else {
-                        empiricalMeansFSC[f][s][c] =
-                                empiricalMeansFSC[f][s - 1][c] * (s - 1) / s + criterionValuesCFS[c][f][s] / s;
-                    }
-                    if (isApproximation) {
-                        confidenceIntervalsFSC[f][s][c] = ((OneShotRademacherComplexity) complexity).getApproximateConfidenceInterval(
-                                empiricalMeansFSC[f][s][c],
-                                criterionValuesCFS[c],
-                                delta,
-                                s + 1,
-                                100
-                        );
-                    } else {
-                        confidenceIntervalsFSC[f][s][c] = complexity.getConfidenceInterval(
-                                empiricalMeansFSC[f][s][c],
-                                complexity.getComplexity(criterionValuesCFS[c], s + 1),
-                                delta,
-                                s + 1,
-                                criteria.size(),
-                                functionClass.size());
-                    }
-
-
-                }
-                empiricalMeansFC[f][c] = empiricalMeansFSC[f][samples.size() - 1][c];
-                System.out.println(empiricalMeansFC[f][c]);
-
-                // Bounds those estimates
-                confidenceIntervalsFC[f][c] = confidenceIntervalsFSC[f][samples.size() - 1][c];
-
-            }
-        }
-
-        for (int s = 0; s < samples.size(); s++) {
-            for (int f = 0; f < functionClass.size(); f++) {
-                for (int c = 0; c < criteria.size(); c++) {
-                    List<String> critRecord = new ArrayList<>();
-                    critRecord.add(String.valueOf(s));
-                    critRecord.add(String.valueOf(s + 1));
-                    critRecord.add(String.valueOf(f));
-                    critRecord.add(String.valueOf(objective.compute(empiricalMeansFSC[f][s])));
-                    critRecord.add(String.valueOf(objective.minRectangle(confidenceIntervalsFSC[f][s])));
-                    critRecord.add(String.valueOf(objective.maxRectangle(confidenceIntervalsFSC[f][s])));
-                    critRecord.add(String.valueOf(c));
-                    critRecord.add(String.valueOf(empiricalMeansFSC[f][s][c]));
-                    critRecord.add(String.valueOf(confidenceIntervalsFSC[f][s][c].getLowerBound()));
-                    critRecord.add(String.valueOf(confidenceIntervalsFSC[f][s][c].getUpperBound()));
-                    csvWriter.writeNext(critRecord.toArray(new String[critRecord.size()]));
-                }
-            }
-        }
-
-        Integer optimalFIndex = null;
-        Double optimalLowerBoundF = null;
-        Double maxUpperBound = null;
-        for (int f = 0; f < functionClass.size(); f++) {
-            // For functions that we are confident are valid, we find the one with the greatest lower-bound objective
-            if (constraint.isAlwaysValidRectangle(confidenceIntervalsFC[f])) {
-                double lowerBound = objective.minRectangle(confidenceIntervalsFC[f]);
-                if (optimalFIndex == null || lowerBound < optimalLowerBoundF) {
-                    optimalLowerBoundF = lowerBound;
-                    optimalFIndex = f;
-                }
-            }
-            // For functions that may be valid, then we find an upper bound on the objective function
-            if (!constraint.isNeverValidRectangle(confidenceIntervalsFC[f])) {
-                double upperBound = objective.maxRectangle(confidenceIntervalsFC[f]);
-                if (maxUpperBound == null || upperBound > maxUpperBound) {
-                    maxUpperBound = upperBound;
-                }
-            }
-        }
-
-        // If no valid function is found, throw exception
-        if (optimalFIndex == null) {
-            throw new InsufficientSampleSizeException();
-        }
-
-        return new AlgorithmSelectionOutput(
-                functionClass.get(optimalFIndex),
-                ArrayUtils.toObject(empiricalMeansFC[optimalFIndex]),
-                confidenceIntervalsFC[optimalFIndex],
-                maxUpperBound);
-    }
-
-    public AlgorithmSelectionOutput runAlgorithmComplete(
-            File inputCSV,
-            File outputCSV,
-            List<Function> functionClass,
-            List<Criterion> criteria,
-            Objective objective,
-            Constraint constraint,
-            double delta,
-            boolean isApproximation) throws InsufficientSampleSizeException {
-
-        int numSamples = 0;
-        List<Integer> sampleIndices = new ArrayList<>();
-        try {
-            Reader reader = Files.newBufferedReader(inputCSV.toPath());
-            CSVReader csvCounter = new CSVReader(reader);
-
-            csvCounter.readNext();
-
-            int totalLines = 0;
-            String[] nextRecord;
-            while ((nextRecord = csvCounter.readNext()) != null) {
-                totalLines++;
-                int s = Integer.valueOf(nextRecord[0]);
-                if (!sampleIndices.contains(s)) {
-                    sampleIndices.add(s);
-                }
-            }
-            numSamples = totalLines / functionClass.size();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-
-        Double[][][] criterionValuesCFS = new Double[criteria.size()][functionClass.size()][numSamples];
-
-        // Generates a permutation to ensure randomness of samples
-        List<Integer> samplePermutation = new ArrayList<>();
-        for (int s = 0; s < numSamples; s++) {
-            samplePermutation.add(s);
-        }
-        java.util.Collections.shuffle(samplePermutation);
-
-        try {
-            Reader reader = Files.newBufferedReader(inputCSV.toPath());
-            CSVReader csvReader = new CSVReader(reader);
-
-            csvReader.readNext();
-
-            String[] nextRecord;
-            while ((nextRecord = csvReader.readNext()) != null) {
-                int s = samplePermutation.get(sampleIndices.indexOf(Integer.valueOf(nextRecord[0])));
-                int f = Integer.valueOf(nextRecord[2]);
-
-                for (int c = 0; c < criteria.size(); c++) {
-                    criterionValuesCFS[c][f][s] = Double.valueOf(nextRecord[3 + c]);
-                }
-
-            }
-        } catch (IOException e) {
-            System.out.println(e.getStackTrace());
-        }
-
-
-        Writer writer = null;
-        try {
-            writer = Files.newBufferedWriter(outputCSV.toPath());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        CSVWriter csvWriter = new CSVWriter(writer,
-                CSVWriter.DEFAULT_SEPARATOR,
-                CSVWriter.NO_QUOTE_CHARACTER,
-                CSVWriter.DEFAULT_ESCAPE_CHARACTER,
-                CSVWriter.DEFAULT_LINE_END);
-
-        List<String> headerRecord = new ArrayList<>();
-        headerRecord.add("ITERATION");
-        headerRecord.add("NUMBER_SAMPLES");
-        headerRecord.add("FUNCTION_INDEX");
-        headerRecord.add("OBJECTIVE_MEAN");
-        headerRecord.add("OBJECTIVE_MIN");
-        headerRecord.add("OBJECTIVE_MAX");
-        headerRecord.add("CRITERION_INDEX");
-        headerRecord.add("CRITERION_MEAN");
-        headerRecord.add("CRITERION_MIN");
-        headerRecord.add("CRITERION_MAX");
-        csvWriter.writeNext(headerRecord.toArray(new String[headerRecord.size()]));
-
-
-        double[][][] empiricalMeansFSC = new double[functionClass.size()][numSamples][criteria.size()];
-        ConfidenceInterval[][][] confidenceIntervalsFSC =
-                new ConfidenceInterval[functionClass.size()][numSamples][criteria.size()];
-
-        double[][] empiricalMeansFC = new double[functionClass.size()][criteria.size()];
-        ConfidenceInterval[][] confidenceIntervalsFC = new ConfidenceInterval[functionClass.size()][criteria.size()];
-
-        for (int c = 0; c < criteria.size(); c++) {
-            for (int f = 0; f < functionClass.size(); f++) {
-
-                // Estimates the value of each criterion for each function
-                // empiricalMeansFC[f][c] = 0.;
-
-                for (int s = 0; s < numSamples; s++) {
-                    if (s == 0) {
-                        empiricalMeansFSC[f][s][c] = criterionValuesCFS[c][f][s];
-                    } else {
-                        empiricalMeansFSC[f][s][c] =
-                                empiricalMeansFSC[f][s - 1][c] * (s - 1) / s + criterionValuesCFS[c][f][s] / s;
-                    }
-                    if (isApproximation) {
-                        confidenceIntervalsFSC[f][s][c] = ((OneShotRademacherComplexity) complexity).getApproximateConfidenceInterval(
-                                empiricalMeansFSC[f][s][c],
-                                criterionValuesCFS[c],
-                                delta,
-                                s + 1,
-                                100
-                        );
-                    } else {
-                        confidenceIntervalsFSC[f][s][c] = complexity.getConfidenceInterval(
-                                empiricalMeansFSC[f][s][c],
-                                complexity.getComplexity(criterionValuesCFS[c], s + 1),
-                                delta,
-                                s + 1,
-                                criteria.size(),
-                                functionClass.size());
-                    }
-
-
-                }
-                empiricalMeansFC[f][c] = empiricalMeansFSC[f][numSamples - 1][c];
-                System.out.println(empiricalMeansFC[f][c]);
-
-                // Bounds those estimates
-                confidenceIntervalsFC[f][c] = confidenceIntervalsFSC[f][numSamples - 1][c];
-
-            }
-        }
-
-        for (int s = 0; s < numSamples; s++) {
-            for (int f = 0; f < functionClass.size(); f++) {
-                for (int c = 0; c < criteria.size(); c++) {
-                    List<String> critRecord = new ArrayList<>();
-                    critRecord.add(String.valueOf(s));
-                    critRecord.add(String.valueOf(s + 1));
-                    critRecord.add(String.valueOf(functionClass.get(f).toString()));
-                    critRecord.add(String.valueOf(objective.compute(empiricalMeansFSC[f][s])));
-                    critRecord.add(String.valueOf(objective.minRectangle(confidenceIntervalsFSC[f][s])));
-                    critRecord.add(String.valueOf(objective.maxRectangle(confidenceIntervalsFSC[f][s])));
-                    critRecord.add(String.valueOf(c));
-                    critRecord.add(String.valueOf(empiricalMeansFSC[f][s][c]));
-                    critRecord.add(String.valueOf(confidenceIntervalsFSC[f][s][c].getLowerBound()));
-                    critRecord.add(String.valueOf(confidenceIntervalsFSC[f][s][c].getUpperBound()));
-                    csvWriter.writeNext(critRecord.toArray(new String[critRecord.size()]));
-                }
-            }
-        }
-
-        Integer optimalFIndex = null;
-        Double optimalLowerBoundF = null;
-        Double maxUpperBound = null;
-        for (int f = 0; f < functionClass.size(); f++) {
-            // For functions that we are confident are valid, we find the one with the greatest lower-bound objective
-            if (constraint.isAlwaysValidRectangle(confidenceIntervalsFC[f])) {
-                double lowerBound = objective.minRectangle(confidenceIntervalsFC[f]);
-                if (optimalFIndex == null || lowerBound < optimalLowerBoundF) {
-                    optimalLowerBoundF = lowerBound;
-                    optimalFIndex = f;
-                }
-            }
-            // For functions that may be valid, then we find an upper bound on the objective function
-            if (!constraint.isNeverValidRectangle(confidenceIntervalsFC[f])) {
-                double upperBound = objective.maxRectangle(confidenceIntervalsFC[f]);
-                if (maxUpperBound == null || upperBound > maxUpperBound) {
-                    maxUpperBound = upperBound;
-                }
-            }
-        }
-
-        // If no valid function is found, throw exception
-        if (optimalFIndex == null) {
-            throw new InsufficientSampleSizeException();
-        }
-
-        return new AlgorithmSelectionOutput(
-                functionClass.get(optimalFIndex),
-                ArrayUtils.toObject(empiricalMeansFC[optimalFIndex]),
-                confidenceIntervalsFC[optimalFIndex],
-                maxUpperBound);
+        return runAlgorithmCSVOutput(
+                criterionValuesCFS,
+                functionClass,
+                criteria,
+                objective,
+                constraint,
+                samples.size(),
+                outputCSV,
+                delta,
+                isApproximation);
     }
 
     public AlgorithmSelectionOutput runAlgorithm(
@@ -470,146 +135,82 @@ public class GlobalSampling {
             Objective objective,
             Constraint constraint,
             double delta,
-            boolean isApproximation) throws InsufficientSampleSizeException {
+            boolean isApproximation) throws InsufficientSampleSizeException, EmptyConfidenceIntervalException, IncorrectlyClassifiedCriterionException {
 
-        int numSamples = 0;
-        List<Integer> sampleIndices = new ArrayList<>();
-        try {
-            Reader reader = Files.newBufferedReader(inputCSV.toPath());
-            CSVReader csvCounter = new CSVReader(reader);
+        int numSamples = ProgressiveSampling.getNumSamplesCSV(inputCSV, functionClass.size());
+        List<Integer> sampleIndices = ProgressiveSampling.getSampleIndicesCSV(inputCSV, functionClass.size());
 
-            csvCounter.readNext();
+        Double[][][] criterionValuesCFS = ProgressiveSampling.readCriterionValuesFromCSV(
+                criteria.size(),
+                functionClass.size(),
+                numSamples,
+                sampleIndices,
+                inputCSV);
 
-            int totalLines = 0;
-            String[] nextRecord;
-            while ((nextRecord = csvCounter.readNext()) != null) {
-                totalLines++;
-                int s = Integer.valueOf(nextRecord[0]);
-                if (!sampleIndices.contains(s)) {
-                    sampleIndices.add(s);
-                }
-            }
-            numSamples = totalLines / functionClass.size();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        return runAlgorithmCSVOutput(
+                criterionValuesCFS,
+                functionClass,
+                criteria,
+                objective,
+                constraint,
+                numSamples,
+                outputCSV,
+                delta,
+                isApproximation);
+    }
 
-
-        Double[][][] criterionValuesCFS = new Double[criteria.size()][functionClass.size()][numSamples];
-
-        // Generates a permutation to ensure randomness of samples
-        List<Integer> samplePermutation = new ArrayList<>();
-        for (int s = 0; s < numSamples; s++) {
-            samplePermutation.add(s);
-        }
-        java.util.Collections.shuffle(samplePermutation);
-
-        try {
-            Reader reader = Files.newBufferedReader(inputCSV.toPath());
-            CSVReader csvReader = new CSVReader(reader);
-
-            csvReader.readNext();
-
-            String[] nextRecord;
-            while ((nextRecord = csvReader.readNext()) != null) {
-                int s = samplePermutation.get(sampleIndices.indexOf(Integer.valueOf(nextRecord[0])));
-                int f = Integer.valueOf(nextRecord[2]);
-
-                for (int c = 0; c < criteria.size(); c++) {
-                    criterionValuesCFS[c][f][s] = Double.valueOf(nextRecord[3 + c]);
-                }
-
-            }
-        } catch (IOException e) {
-            System.out.println(e.getStackTrace());
-        }
-
-
+    private AlgorithmSelectionOutput runAlgorithmCSVOutput(
+            Double[][][] criterionValuesCFS,
+            List<Function> functionClass,
+            List<Criterion> criteria,
+            Objective objective,
+            Constraint constraint,
+            int numSamples,
+            File outputCSV,
+            double delta,
+            boolean isApproximation
+    ) throws EmptyConfidenceIntervalException, IncorrectlyClassifiedCriterionException {
         Writer writer = null;
         try {
             writer = Files.newBufferedWriter(outputCSV.toPath());
         } catch (IOException e) {
             e.printStackTrace();
         }
-        CSVWriter csvWriter = new CSVWriter(writer,
-                CSVWriter.DEFAULT_SEPARATOR,
-                CSVWriter.NO_QUOTE_CHARACTER,
-                CSVWriter.DEFAULT_ESCAPE_CHARACTER,
-                CSVWriter.DEFAULT_LINE_END);
+        CSVWriter csvWriter = ProgressiveSampling.writeHeaderOutputCSV(writer);
 
-        List<String> headerRecord = new ArrayList<>();
-        headerRecord.add("ITERATION");
-        headerRecord.add("NUMBER_SAMPLES");
-        headerRecord.add("FUNCTION_INDEX");
-        headerRecord.add("OBJECTIVE_MEAN");
-        headerRecord.add("OBJECTIVE_MIN");
-        headerRecord.add("OBJECTIVE_MAX");
-        headerRecord.add("CRITERION_INDEX");
-        headerRecord.add("CRITERION_MEAN");
-        headerRecord.add("CRITERION_MIN");
-        headerRecord.add("CRITERION_MAX");
-        csvWriter.writeNext(headerRecord.toArray(new String[headerRecord.size()]));
-
-        double[][] empiricalMeansFC = new double[functionClass.size()][criteria.size()];
-        ConfidenceInterval[][] confidenceIntervalsFC = new ConfidenceInterval[functionClass.size()][criteria.size()];
-
-        for (int c = 0; c < criteria.size(); c++) {
-            for (int f = 0; f < functionClass.size(); f++) {
-
-                // Estimates the value of each criterion for each function
-                // empiricalMeansFC[f][c] = 0.;
-
-                empiricalMeansFC[f][c] = 0.;
-
-                for (double v : criterionValuesCFS[c][f]) {
-                    empiricalMeansFC[f][c] += (v / numSamples);
-                }
-
-                if (isApproximation && complexity instanceof OneShotRademacherComplexity) {
-                    confidenceIntervalsFC[f][c] = ((OneShotRademacherComplexity) complexity).getApproximateConfidenceInterval(
-                            empiricalMeansFC[f][c],
-                            criterionValuesCFS[c],
-                            delta,
-                            numSamples,
-                            100
-                    );
-                } else if (isApproximation && complexity instanceof EMDComplexity) {
-                    confidenceIntervalsFC[f][c] = ((EMDComplexity) complexity).getApproximateConfidenceInterval(
-                            empiricalMeansFC[f][c],
-                            criterionValuesCFS[c],
-                            delta,
-                            numSamples,
-                            100
-                    );
-                } else {
-                    confidenceIntervalsFC[f][c] = complexity.getConfidenceInterval(
-                            empiricalMeansFC[f][c],
-                            complexity.getComplexity(criterionValuesCFS[c], numSamples),
-                            delta,
-                            numSamples,
-                            criteria.size(),
-                            functionClass.size());
-                }
-            }
-        }
+        List<Double[]> empiricalMeansFC = new ArrayList<>();
+        List<ConfidenceInterval[]> confidenceIntervalsFC = new ArrayList<>();
 
         for (int f = 0; f < functionClass.size(); f++) {
-            for (int c = 0; c < criteria.size(); c++) {
-                System.out.println(f + ", " + c);
-                List<String> critRecord = new ArrayList<>();
-                critRecord.add(String.valueOf(numSamples - 1));
-                critRecord.add(String.valueOf(numSamples));
-                critRecord.add(String.valueOf(functionClass.get(f).toString()));
-                critRecord.add(String.valueOf(objective.compute(empiricalMeansFC[f])));
-                critRecord.add(String.valueOf(objective.minRectangle(confidenceIntervalsFC[f])));
-                critRecord.add(String.valueOf(objective.maxRectangle(confidenceIntervalsFC[f])));
-                critRecord.add(String.valueOf(c));
-                critRecord.add(String.valueOf(empiricalMeansFC[f][c]));
-                critRecord.add(String.valueOf(confidenceIntervalsFC[f][c].getLowerBound()));
-                critRecord.add(String.valueOf(confidenceIntervalsFC[f][c].getUpperBound()));
-                csvWriter.writeNext(critRecord.toArray(new String[critRecord.size()]));
-            }
+            empiricalMeansFC.add(new Double[criteria.size()]);
+            confidenceIntervalsFC.add(new ConfidenceInterval[criteria.size()]);
         }
+        ProgressiveSampling.computeMeansAndConfidenceIntervals(
+                criterionValuesCFS,
+                empiricalMeansFC,
+                confidenceIntervalsFC,
+                criteria,
+                functionClass.size(),
+                numSamples,
+                1,
+                delta,
+                isApproximation,
+                complexity);
+
+        ProgressiveSampling.writeIterationResultsCSV(
+                1,
+                1,
+                numSamples,
+                criteria,
+                functionClass,
+                criterionValuesCFS,
+                empiricalMeansFC,
+                confidenceIntervalsFC,
+                constraint,
+                objective,
+                csvWriter,
+                complexity,
+                false);
 
         try {
             writer.close();
@@ -618,52 +219,58 @@ public class GlobalSampling {
             e.printStackTrace();
         }
 
-        Integer optimalFIndex = null;
-        Double optimalLowerBoundF = null;
-        Double maxUpperBound = null;
-        for (int f = 0; f < functionClass.size(); f++) {
-            // For functions that we are confident are valid, we find the one with the greatest lower-bound objective
-            if (constraint.isAlwaysValidRectangle(confidenceIntervalsFC[f])) {
-                double lowerBound = objective.minRectangle(confidenceIntervalsFC[f]);
-                if (optimalFIndex == null || lowerBound < optimalLowerBoundF) {
-                    optimalLowerBoundF = lowerBound;
-                    optimalFIndex = f;
-                }
-            }
-            // For functions that may be valid, then we find an upper bound on the objective function
-            if (!constraint.isNeverValidRectangle(confidenceIntervalsFC[f])) {
-                double upperBound = objective.maxRectangle(confidenceIntervalsFC[f]);
-                if (maxUpperBound == null || upperBound > maxUpperBound) {
-                    maxUpperBound = upperBound;
-                }
-            }
-        }
+        Integer optimalFIndex = ProgressiveSampling.getOptimalFunctionIndex(
+                functionClass,
+                confidenceIntervalsFC,
+                objective,
+                constraint);
+
+        Double minLowerBound = ProgressiveSampling.getMinLowerBound(
+                functionClass,
+                confidenceIntervalsFC,
+                objective,
+                constraint);
+
 
         System.out.println("Optimal Function: " + functionClass.get(optimalFIndex).toString());
 
         System.out.println("Smallest Interval: " +
-                (objective.maxRectangle(confidenceIntervalsFC[optimalFIndex]) - objective.minRectangle(confidenceIntervalsFC[optimalFIndex])));
-
+                (objective.maxRectangle(confidenceIntervalsFC.get(optimalFIndex))
+                        - objective.minRectangle(confidenceIntervalsFC.get(optimalFIndex))));
 
 
         int numContendingFunctions = 0;
         for (int f = 0; f < functionClass.size(); f++) {
-            if (objective.minRectangle(confidenceIntervalsFC[f]) < objective.maxRectangle(confidenceIntervalsFC[optimalFIndex])) {
+            if (objective.minRectangle(confidenceIntervalsFC.get(f))
+                    < objective.maxRectangle(confidenceIntervalsFC.get(optimalFIndex))) {
                 numContendingFunctions++;
             }
         }
 
         System.out.println("Functions Remaining: " + numContendingFunctions);
 
-        // If no valid function is found, throw exception
-        if (optimalFIndex == null) {
-            throw new InsufficientSampleSizeException();
-        }
 
         return new AlgorithmSelectionOutput(
                 functionClass.get(optimalFIndex),
-                ArrayUtils.toObject(empiricalMeansFC[optimalFIndex]),
-                confidenceIntervalsFC[optimalFIndex],
-                maxUpperBound);
+                empiricalMeansFC.get(optimalFIndex),
+                confidenceIntervalsFC.get(optimalFIndex),
+                minLowerBound);
+
+    }
+
+    private Double[][][] sampleCriterionComputations(
+            List<Sample> samples,
+            List<Function> functionClass,
+            List<Criterion> criteria) {
+        Double[][][] criterionValuesCFS = new Double[criteria.size()][functionClass.size()][samples.size()];
+        for (int f = 0; f < functionClass.size(); f++) {
+            for (int s = 0; s < samples.size(); s++) {
+                FunctionOutput fOut = functionClass.get(f).apply(samples.get(s));
+                for (int c = 0; c < criteria.size(); c++) {
+                    criterionValuesCFS[c][f][s] = criteria.get(c).apply(fOut);
+                }
+            }
+        }
+        return criterionValuesCFS;
     }
 }
