@@ -11,10 +11,10 @@ import java.util.List;
  */
 public class LameMP3EncodingFunction extends EncodingFunction {
     private static String EXTENSION = "mp3";
-    private static int MAX_PORTABILITY = 9;
+    private static int MAX_PORTABILITY = 10;
     private static int MIN_PORTABILITY = 0;
 
-    private int portability;
+    private double portability;
 
     private Runtime run = Runtime.getRuntime();
 
@@ -23,7 +23,7 @@ public class LameMP3EncodingFunction extends EncodingFunction {
      * @param portability integer in {0, ..., 9} where 0 is highest quality and 9 is most portable
      * @param criteria
      */
-    public LameMP3EncodingFunction(int portability, List<Criterion> criteria) {
+    public LameMP3EncodingFunction(double portability, List<Criterion> criteria) {
         super(EXTENSION, criteria);
         assert portability <= MAX_PORTABILITY && portability >= MIN_PORTABILITY;
         this.portability = portability;
